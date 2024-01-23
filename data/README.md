@@ -28,7 +28,6 @@ libs: 项目Micropython库
     
     |---ap.py: AP热点配网
     |---global_var.py：全局变量定义
-    |---mode.py: 开发者模式程序
     
     ui：UI主题库 
         |---dial.py: 极简表盘
