@@ -24,7 +24,7 @@ data: 数据
 lib: 服务
 
     |---develop
-        |---devmode.py: 开发者模式
+        |---devmode.py: 开发者模式(还没开发完)
     |---service
         |---service:系统服务文件(core)
         |---led.py: 用于控制led灯
