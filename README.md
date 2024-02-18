@@ -72,7 +72,7 @@ libs: 项目Micropython库
 
 使用`from lib.service.service import server`导入server库
 
-这几行代码用于联网
+这两行代码用于联网
 
 while not server.WIFI_Connect()==True:          
     pass
