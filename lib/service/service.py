@@ -4,7 +4,7 @@ Powered By XZJ
 Version 3.1.9
 '''
 print("boot")
-print('core 3.1.9')
+print('core 3.1.9')#可以注释掉
 #定义常用颜色
 RED = (255,0,0)
 GREEN = (0,255,0)

@@ -5,7 +5,6 @@ Version 1.1.14
 By XZJ
 '''
 
-print('Version 1.1.14')
 #导入相关模块
 from libs import global_var
 d = global_var.LCD
