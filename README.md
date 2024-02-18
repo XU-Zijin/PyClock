@@ -70,3 +70,25 @@ libs: 项目Micropython库
 
 使用`from lib.service import led`从而调用led.py，使用`led.on()`即可开启板子上自带的led指示灯，使用`led.off()`即可关闭。
 
+使用`from lib.service.service import server`导入server库
+
+这几行代码用于联网
+
+while not server.WIFI_Connect()==True:          
+    pass
+
+`server.sync_ntp()`用于同步网络时钟
+
+`server.city_get()`获取城市编码
+
+`city=server.re('city')`返回城市编码
+
+`datetime = server.re('rtc')`返回rtc时间
+
+`server.weather_get(datetime)`获取天气
+
+`weather=server.re('weather')`返回天气
+
+`server.info_print()`打印天气到调试台
+
+`server.check()`自检
