@@ -2,13 +2,11 @@
 主文件
 Powered By MicroPython
 Version 6.1.7
-By XZJ
 '''
-print('Powered By XZJ')
-print('Version 6.1.7')
+
+print('Version 6.1.7')#可以注释掉
 #导入相关模块
 from libs.ui import default
-#from libs.ui import dial
 #导入server
 from lib.service.service import server
 from lib.service import led
@@ -124,18 +122,13 @@ if sys==1:
         if tick != datetime[6]:
             tick = datetime[6]
             #wdt.feed() #喂狗
-            #wst = server.re('wst')
             ntpst = server.re('ts')
             f = open('/data/file/set.txt','r',encoding = "utf-8")
             s = f.read()
             f.close()
             if s=='1' or s=='simple':
-                #dial.UI_Display(datetime) #极简表盘
                 default.UI_Display(city,weather,datetime)
     #        print('gc2:',gc.mem_free()) #内存监测
-            #if wst==0:
-                #server.weather_get(datetime)
-                #weather=server.re('weather')
             if ntpst==0:
                 server.sync_ntp()
                 datetime = server.re('rtc')
