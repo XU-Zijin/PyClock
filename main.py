@@ -20,7 +20,7 @@ f.write("simple")
 f.close()
 
 from libs import ap
-from machine import Pin,WDT
+from machine import Pin,WDT #WDT为看门狗模块，如有调试需要，请注释
 sys=0#系统状态，0为boot，1为run
 count=0
 #按键    
@@ -53,7 +53,7 @@ def key(KEY):
         #长按
         start = time.ticks_ms()
         while KEY.value() == 0:
-            if time.ticks_ms() - start >5000: #长按按键5秒   
+            if time.ticks_ms() - start >5000: #长按按键5秒恢复出厂设置  
                 led.on() #指示灯亮
                 print("Factory Mode!")
                 cwu = 0
@@ -86,11 +86,11 @@ while 'wifi.txt' not in os.listdir('/data/file/'):
     f.write("simple")
     f.close()
 #启动看门狗，超时30秒。
-#wdt = WDT(timeout=30000)
+wdt = WDT(timeout=30000)#如有调试需要，请注释
 #连接WiFi
 while not server.WIFI_Connect()==True: #等待wifi连接             
     pass
-#wdt.feed() #喂狗
+wdt.feed() #喂狗 #如有调试需要，请注释
 #同步网络时钟
 server.sync_ntp()
 #获取城市名称和编码
@@ -121,14 +121,14 @@ if sys==1:
         #每秒刷新一次UI
         if tick != datetime[6]:
             tick = datetime[6]
-            #wdt.feed() #喂狗
+            wdt.feed() #喂狗 #如有调试需要，请注释
             ntpst = server.re('ts')
             f = open('/data/file/set.txt','r',encoding = "utf-8")
             s = f.read()
             f.close()
             if s=='1' or s=='simple':
                 default.UI_Display(city,weather,datetime)
-    #        print('gc2:',gc.mem_free()) #内存监测
+                #print('gc2:',gc.mem_free()) #内存监测 #如有调试需要，请开启
             if ntpst==0:
                 server.sync_ntp()
                 datetime = server.re('rtc')

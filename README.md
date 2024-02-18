@@ -26,7 +26,7 @@ lib: 服务
     |---develop
         |---devmode.py: 开发者模式(还没开发完)
     |---service
-        |---service:系统服务(core)
+        |---service.py:系统服务(core)
         |---led.py: 用于控制led灯
         |---system.py: 用于pyshell(待开发)
 
@@ -56,3 +56,17 @@ libs: 项目Micropython库
 而`libs`里面就是各种所需的库了，还有表盘，也就是UI。
 
 ### 功能介绍
+
+这个天气时钟的主要功能：
+
+* 查看天气
+* 查看温湿度
+* 查看时间
+* 可以熄屏
+* 开机自动校准时间（把原项目的获取时间优化了）
+* 手机web配网
+
+### service.py和led.py文件的调用说明
+
+使用`from lib.service import led`从而调用led.py，使用`led.on()`即可开启板子上自带的led指示灯，使用`led.off()`即可关闭。
+

@@ -20,6 +20,7 @@ from tftlcd import LCD15
 ########################
 d = LCD15(portrait=1)
 d.fill(BLACK)
+# 开机文字，不需要可以注释
 d.printStr('Powered by',60,185,color=WHITE,size=1)
 d.printStr('Micropython',60,205,color=WHITE,size=2)
 d.printStr('PyClock',60,85,color=WHITE,size=3)
@@ -35,9 +36,9 @@ city=['','']
 weather = ['']*9
 total = 0
 lost = 0 
-state=0#系统状态，0为boot,1为wifi,2为time,3为city，4为weather
-weather_state=0#天气状态，连上为1反之为0
-time_state=0#时间状态，连上为1反之为0
+state=0#系统自检状态码，0为boot,1为wifi,2为time,3为city，4为weather
+weather_state=0#天气状态，获取到天气为1反之为0
+time_state=0#时间状态，获取到时间为1反之为0
 class server:
     datetime=rtc.datetime()
     def __init__(self,city):
@@ -254,7 +255,7 @@ class server:
             state+=1
             time.sleep_ms(1000)
     
-    def re(server):
+    def re(server): #返回各种值，在main.py文件中会调用
         global city,weather,weather_state,time_state,state
         datetime = rtc.datetime()
         if server=='city':
@@ -272,14 +273,14 @@ class server:
         else:
             return False
     
-    def screen():
+    def screen(): #息屏
         tftlcd.LCD15(portrait=1)
         print('screen off')
         time.sleep(0.1)
         d.fill(BLACK)
         tftlcd.LCD15(portrait=1)
     
-    def check():
+    def check(): #自检
         global state
         f = open('/data/file/mode.txt','r',encoding = "utf-8")
         k = f.read()
@@ -292,7 +293,7 @@ class server:
             f.write("run")
             f.close()
             
-    def info_print():
+    def info_print(): #打印天气
         global city,weather
         print(rtc.datetime())
         print('城市:',city[0],city[1])
