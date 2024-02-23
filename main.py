@@ -90,7 +90,7 @@ wdt = WDT(timeout=30000)#如有调试需要，请注释
 #连接WiFi
 while not server.WIFI_Connect()==True: #等待wifi连接             
     pass
-wdt.feed() #喂狗 #如有调试需要，请注释
+wdt.feed() #喂狗 如有调试需要，请注释
 #同步网络时钟
 server.sync_ntp()
 #获取城市名称和编码
@@ -121,14 +121,14 @@ if sys==1:
         #每秒刷新一次UI
         if tick != datetime[6]:
             tick = datetime[6]
-            wdt.feed() #喂狗 #如有调试需要，请注释
+            wdt.feed() #喂狗 如有调试需要，请注释
             ntpst = server.re('ts')
             f = open('/data/file/set.txt','r',encoding = "utf-8")
             s = f.read()
             f.close()
             if s=='1' or s=='simple':
                 default.UI_Display(city,weather,datetime)
-                #print('gc2:',gc.mem_free()) #内存监测 #如有调试需要，请开启
+                #print('gc2:',gc.mem_free()) #内存监测 如有调试需要，请开启
             if ntpst==0:
                 server.sync_ntp()
                 datetime = server.re('rtc')
