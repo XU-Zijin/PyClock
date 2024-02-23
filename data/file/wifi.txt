@@ -1,1 +1,1 @@
-{"SSID": "ChinaNet-1301", "CITY_PY": "guangzhou", "PASSWORD": "By123456++*", "CITY": "广州"}
+{"SSID": "", "CITY_PY": "", "PASSWORD": "", "CITY": ""}
