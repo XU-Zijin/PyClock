@@ -33,7 +33,6 @@ lib: 服务
 libs: 项目Micropython库
 
     urllib: urequest库
-        |---parse.py
         |---urequest.py: 爬虫库
     |---ap.py: AP热点配网
     |---global_var.py：全局变量定义
@@ -74,8 +73,10 @@ libs: 项目Micropython库
 
 这两行代码用于联网
 
+```
 while not server.WIFI_Connect()==True:          
     pass
+```
 
 `server.sync_ntp()`用于同步网络时钟
 
@@ -92,3 +93,5 @@ while not server.WIFI_Connect()==True:
 `server.info_print()`打印天气到调试台
 
 `server.check()`自检
+
+注：main.py默认开启看门狗功能
