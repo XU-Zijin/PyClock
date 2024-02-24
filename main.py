@@ -25,55 +25,37 @@ from libs import ap
 from machine import Pin,WDT,Timer
 sys=0#系统状态，0为boot，1为run
 count=0
-c=0
-button_pressed_time = None  # 记录上一次按键时间
-# 定义多次点击的间隔阈值（毫秒）
-mct = 500  
-# 定义一个定时器，在没有按键活动时重置计数器
-timer=Timer(-1)  
 #按键    
 KEY=Pin(9,Pin.IN,Pin.PULL_UP) #构建KEY对象
 #按键中断触发
 def key(KEY):
-    global sys,count,button_pressed_time,c
-    current_time = time.ticks_ms()
+    global sys,count
     time.sleep_ms(10) #消除抖动
     if KEY.value() == 0: #确认按键被按下
-        if button_pressed_time is None or time.ticks_diff(current_time, button_pressed_time) > mct:
-            c = 1
-            button_pressed_time = current_time
-            # 重置定时器，指定时间后如果没有新的按键动作则重置计数器
-            timer.init(mode=Timer.ONE_SHOT, period=mct, callback=lambda t:reset_count())
-            if sys == 1:
-                if count == 0:
-                    server.screen()
-                    f = open('/data/file/set.txt','w',encoding = "utf-8")
-                    f.write('0')
-                    f.close()
-                    count += 1
-                elif count == 1:
-                    f = open('/data/file/set.txt','w',encoding = "utf-8")
-                    f.write('1')
-                    f.close()
-                    count = 0
-                    print('screen on')
-            elif sys == 0:
-                from lib.develop import devmode
+        if sys == 1:
+            if count == 0:
+                server.screen()
                 f = open('/data/file/set.txt','w',encoding = "utf-8")
-                f.write("dev")
+                f.write('0')
                 f.close()
-                mode.run()
-            gc.collect()
-        elif time.ticks_diff(current_time, button_pressed_time) < mct:
-            c+=1
-            button_pressed_time = current_time
-            print('yes')
-            
-        #print('Button pressed count:', count)
+                count += 1
+            elif count == 1:
+                f = open('/data/file/set.txt','w',encoding = "utf-8")
+                f.write('1')
+                f.close()
+                count = 0
+                print('screen on')
+        elif sys == 0:
+            from lib.develop import devmode
+            f = open('/data/file/set.txt','w',encoding = "utf-8")
+            f.write("dev")
+            f.close()
+            mode.run()
+        gc.collect()
         #长按
         start = time.ticks_ms()
         while KEY.value() == 0:
-            if time.ticks_ms() - start >5000: #长按按键5秒   
+            if time.ticks_ms() - start >5000: #长按按键5秒恢复出厂设置  
                 led.on() #指示灯亮
                 print("Factory Mode!")
                 cwu = 0
@@ -90,11 +72,7 @@ def key(KEY):
                     print('no wifi.txt')
                 print('Rebooting!')
                 machine.reset() #重启开发板
-# 配置按钮的中断，下降沿触发
-KEY.irq(key, Pin.IRQ_FALLING)
-def reset_count():
-    global c
-    c=0
+KEY.irq(key,Pin.IRQ_FALLING) #定义中断，下降沿触发
 ################
 #    主程序    #
 ################
