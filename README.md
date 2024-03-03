@@ -23,12 +23,9 @@ data: 数据
 
 lib: 服务
 
-    |---develop
-        |---devmode.py: 开发者模式(还没开发完)
     |---service
         |---service.py:系统服务(core)
         |---led.py: 用于控制led灯
-        |---system.py: 用于pyshell(待开发)
 
 libs: 项目Micropython库
 
@@ -37,20 +34,15 @@ libs: 项目Micropython库
     |---ap.py: AP热点配网
     |---global_var.py：全局变量定义
     ui：UI主题库 
-        |---dial.py: 极简表盘
         |---default.py: 默认表盘
 
 其中service.py是相当于这个程序的核心，大部分功能从这里调用
-
-`注：因为system.py和devmode.py文件里的功能尚未开发或未开发完，使用时可以删除，不影响现有功能及稳定性，dial.py也可以删除，这是个表盘，如果要用这个表盘我后面会讲如何更换表盘`
 
 ## 代码分析
 
 ### 结构分析
 
 首先`data`文件夹用于存放主题图片、字库、编码以及系统运行时所需的文件。
-
-`lib`文件夹中就是用于调试的`devmode.py`文件及用于系统大部分基础功能`service.py`文件，还有控制led的文件，最后还有一个是计划开发的`system.py`文件，我打算再这个开源硬件PyClock这个板子上实现一个终端功能，也就是pyshell。
 
 而`libs`里面就是各种所需的库了，还有表盘，也就是UI。
 
@@ -95,3 +87,7 @@ while not server.WIFI_Connect()==True:
 `server.check()`自检
 
 注：main.py默认开启看门狗功能
+
+## 如何使用
+
+直接把这个项目clone下来然后把代码丢进pyclock里面就行了，里面默认是出场模式，第一次开机需要配网。
