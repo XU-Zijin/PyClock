@@ -8,7 +8,7 @@ print('Powered By XZJ')
 print('Version 6.1.8')
 #导入相关模块
 from libs.ui import default
-#from libs.ui import dial
+from libs.ui import dial
 #导入server
 from lib.service.service import server
 from lib.service import led
