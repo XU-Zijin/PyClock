@@ -1,4 +1,6 @@
 #AP配网
+from lib.service.service import server
+from lib.service import ip
 from libs import global_var
 import os,json,gc,re
 from machine import Pin
@@ -43,134 +45,143 @@ def send_response(conn, payload, status_code=200):
 
 #WiFi配置页面
 def config_page():
-    return b"""<!DOCTYPE html>
-<!-- saved from url=(0014)about:internet -->
+    return b"""
+<!DOCTYPE html>
 <html>
-  <head>
-    <title>pyClock WiFi Config</title>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <style>
-        .c,
-        body {
-            text-align: center;
-            font-family: verdana
-        }
+<head>
+  <title>PyClock WiFi 配置</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    body {
+      background-color: #303030;
+      color: #fff;
+      font-family: Arial, sans-serif;
+      text-align: center;
+    }
 
-        div,
-        input {
-            padding: 5px;
-            font-size: 1em;
-            margin: 5px 0;
-            box-sizing: border-box;
-                        
-        }
+    .wrapper {
+      margin: auto;
+      max-width: 500px;
+      padding: 20px;
+      border-radius: 5px;
+    }
 
-        input,
-        button,
-        .msg {
-            border-radius: .3rem;
-            width: 100%
-        }
+    h1 {
+      margin-bottom: 2rem;
+    }
 
-        button,
-        input[type=&amp;amp;#39;button&amp;amp;#39;],
-        input[type=&amp;amp;#39;submit&amp;amp;#39;] {
-            cursor: pointer;
-            border: 0;
-            background-color: #1fa3ec;
-            color: #fff;
-            line-height: 2.4rem;
-            font-size: 1.2rem;
-            width: 100%
-        }
+    label,
+    input,
+    button {
+      display: block;
+      width: calc(100% - 20px);
+      margin-bottom: 1rem;
+      padding: 10px;
+    }
 
-        input[type=&amp;amp;#39;file&amp;amp;#39;] {
-            border: 1px solid #1fa3ec
-        }
+    input,
+    button {
+      background: #424242;
+      border: 1px solid #576574;
+      border-radius: 5px;
+      color: #fff;
+    }
 
-        .wrap {
-            text-align: left;
-            display: inline-block;
-            min-width: 260px;
-            max-width: 500px
-        }
+    button {
+      cursor: pointer;
+      background-color: #1fa3ec;
+    }
 
-        body.invert,
-        body.invert a,
-        body.invert h1 {
-            background-color: #606060;
-            color: #fff;
-        }
-
-        body.invert .msg {
-            color: #fff;
-            background-color: #282828;
-            border-top: 1px solid #555;
-            border-right: 1px solid #555;
-            border-bottom: 1px solid #555;
-        }
-
-        body.invert .q[role=img] {
-            -webkit-filter: invert(1);
-            filter: invert(1);
-        }
-
-        input:disabled {
-            opacity: 0.5;
-        }
-    
-</style>
-  </head>
-  <body class="invert">
-    <div class="wrap">
-      <h1>pyClock WiFi配网</h1>
-      <form action="configure" method="post">
-        <div>
-        <label>WiFi账号</label> 
-        <input type="text" name="ssid" /></div>
-        <div>
-        <label>WiFi密码</label> 
-        <input type="password" name="password" /></div>
-        <div>
-        <label>城市名 (例：深圳)</label> 
-        <input type="citycode" name="citycode" /></div>
-        <div>
-        <label>城市拼音 (例：shenzhen)</label> 
-        <input type="citypy" name="citypy" /></div>
-        <br />
-        <input type="submit" value="连接" />
-      </form>
-    </div>
-  </body>
-</html>
-"""
-
-def web_page():
-    return b"""<html>
-                    <head>
-                        <title>pyClock Connecting!</title>
-                        <meta charset="UTF-8">
-                    </head>
-                    <body>
-                        <h1>配置完成。</h1>
-                    </body>
-                </html>"""
+    button:disabled {
+      opacity: 0.5;
+    }
+  </style>
+</head>
+<body>
+  <div class="wrapper">
+    <h1>PyClock WiFi配置</h1>
+    <form action="configure" method="post">
+      <div>
+        <label for="ssid">WiFi账号：</label>
+        <input type="text" id="ssid" name="ssid" />
+      </div>
+      <div>
+        <label for="password">WiFi密码：</label>
+        <input type="password" id="password" name="password" />
+      </div>
+      <button type="submit">连接</button>
+    </form>
+  </div>
+</body>
+</html>"""
 
 def connect_sucess(new_ip):
-    return b"""<html>
-                    <head>
-                        <title>Connect Sucess!</title>
-                        <meta charset="UTF-8">
-                        <meta name="viewport" content="width=device-width, initial-scale=1">
-                    </head>
-                    <body>
-                        <p>Wifi Connect Sucess</p>
-                        <p>IP Address: %s</p>
-                        <a href="http://%s">Home</a>
-                        <a href="/disconnect">Disconnect</a>
-                    </body>
-               </html>""" % (new_ip, new_ip)
+    return b"""
+<!DOCTYPE html>
+<html>
+<head>
+  <title>连接成功!</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      background-color: #303030;
+      color: #fff;
+      font-family: Arial, sans-serif;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      min-height: 100vh;
+    }
+
+    p {
+      margin: 15px 0;
+    }
+
+    a {
+      display: inline-block;
+      margin: 15px;
+      padding: 15px 25px;
+      background-color: #1fa3ec;
+      color: #fff;
+      border-radius: 5px;
+      text-decoration: none;
+      transition: background 0.2s ease-in-out;
+    }
+
+    a:hover,
+    a:focus {
+      background-color: #0e7ac4;
+    }
+
+    /* 媒体查询，针对不同尺寸的设备进行样式调整 */
+    @media (max-width: 600px) {
+      a {
+        padding: 10px 20px;
+      }
+    }
+
+    @media (max-width: 400px) {
+      a {
+        padding: 8px 15px;
+        font-size: 0.9em;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div>
+    <p>WiFi连接成功</p>
+    <p>IP地址：%s</p> <!-- 后端代码替换 %s -->
+    <a href="http://%s">首页</a> <!-- 后端代码替换 %s -->
+    <a href="/disconnect">断开连接</a>
+  </div>
+</body>
+</html>""" % (new_ip, new_ip)
 
 #中文转字节字符串
 _hextobyte_cache = None
@@ -215,58 +226,26 @@ def unquote(string):
 
 #从配置网页获取WiFi账号密码
 def get_wifi_conf(request):
-    match = ure.search("ssid=([^&]*)&password=(.*)&citycode=(.*)&citypy=(.*)", request)
+    match = ure.search("ssid=([^&]*)&password=(.*)", request)
     if match is None:
         return None
 
     try:
         ssid = match.group(1).decode("utf-8").replace("%3F", "?").replace("%21", "!")
         password = match.group(2).decode("utf-8").replace("%3F", "?").replace("%21", "!")
-        cityname = match.group(3).decode("utf-8").replace("%3F", "?").replace("%21", "!")
-        citypy = match.group(4).decode("utf-8").replace("%3F", "?").replace("%21", "!")
     except Exception:
         ssid = match.group(1).replace("%3F", "?").replace("%21", "!")
         password = match.group(2).replace("%3F", "?").replace("%21", "!")
-        cityname = match.group(3).replace("%3F", "?").replace("%21", "!")
-        citypy = match.group(4).replace("%3F", "?").replace("%21", "!")
-
-    if len(ssid) == 0 or len(cityname) == 0: #wifi名称或者城市名称为空。
+        
+    if len(ssid) == 0: #wifi名称为空。
         return None
-    return (ssid.replace('+',' '), password,cityname,citypy)
-
-
-def handle_wifi_configure(ssid, password):
-    if do_connect(ssid, password):         
-        new_ip = wlan_sta.ifconfig()[0]
-        return new_ip
-    else:
-        print('connect fail')
-        return None
+    return (ssid.replace('+',' '), password)
 
 def check_wlan_connected():
     if wlan_sta.isconnected():
         return True
     else:
         return False
-
-def do_connect(ssid, password):
-    wlan_sta.active(True)
-    if wlan_sta.isconnected():
-        return None
-    print('Connect to %s' % ssid)
-    wlan_sta.connect(ssid, password)
-    for retry in range(150):
-        connected = wlan_sta.isconnected()
-        if connected:
-            break
-        time.sleep(0.1)
-        print('.', end='')
-    if connected:
-        print('\nConnected : ', wlan_sta.ifconfig())
-    else:
-        print('\nFailed. Not Connected to: ' + ssid)
-        wlan_sta.active(False)
-    return connected
 
 def read_profiles():
     with open(NETWORK_PROFILES) as f:
@@ -293,43 +272,6 @@ def stop():
         server_socket.close()
         server_socket = None
         
-   
-#判断有无改城市
-def city_judge(CityName):
-
-    if CityName == '':
-        
-        return False
-    
-    city_name = unquote(CityName).decode("gbk") #转成中文编码
-
-    f = open('/data/CityCode.txt', 'r')
-    num = 0
-    
-    while True:
-
-        text = f.readline()
-
-        if city_name in text:
-
-            if city_name == re.match(r'"(.+?)"',text).group(1): #城市名称完全一样
-
-                city_code = re.match(r'"(.+?)"',text.split(': ')[1]).group(1) #"获取城市编码"
-
-                return city_code
-
-        elif '}' in text: #结束，没这个城市。
-            
-            print('No City Name!')
-            return False
-
-        num = num + 1
-
-        if num == 300:
-
-            gc.collect() #内存回收
-            num = 0            
-    f.close()
     
 def startAP():
     
@@ -388,69 +330,52 @@ def startAP():
                     send_response(conn, response)              
                     
                 elif url == "configure":
-                    
-                    #获取配置信息，SSID,PASSWORD,CITY,CITY_PY
+                    #获取配置信息，SSID,PASSWORD
                     ret = get_wifi_conf(request)
                     print(ret)
-                    
-                    if ret != None: #获取信息成功
-                        
-                        if city_judge(ret[2]): #有该城市
+                    if ret != None: #获取信息成功   
+                        #SSID带中文和特殊字符处理
+                        if '%' in ret[0]:
+                            print('wifi chinese')
+                            SSID = unquote(ret[0]).decode("gbk")
+                        else:
+                            SSID = ret[0]
                             
-                            #SSID带中文和特殊字符处理
-                            if '%' in ret[0]:
-                                print('wifi chinese')
-                                SSID = unquote(ret[0]).decode("gbk")
-                            else:
-                                SSID = ret[0]
+                        #PASSWORD带中文和特殊字符处理
+                        if '%' in ret[1]:
+                            print('wifi chinese')
+                            PASSWORD = unquote(ret[1]).decode("gbk")
+                        else:
+                            PASSWORD = ret[1]
                             
-                            #PASSWORD带中文和特殊字符处理
-                            if '%' in ret[1]:
-                                print('wifi chinese')
-                                PASSWORD = unquote(ret[1]).decode("gbk")
-                            else:
-                                PASSWORD = ret[1]
-                            
-                            d.fill(BLACK)
-                            d.printStr('Connecting...', 10, 50, RED, size=2)
-                            d.printStr(SSID, 10, 110, WHITE, size=2)
-                            
-                            ret_ip = handle_wifi_configure(SSID,PASSWORD)
-                            print(ret_ip)
-                            if ret_ip is not None:
-                                
-                                #保存WiFi信息到/data/file/wifi.txt,字典格式。
-                                wifi_info = {'SSID':'','PASSWORD':''}
-
-                                wifi_info['SSID'] = SSID
-                                wifi_info['PASSWORD'] = PASSWORD
-                                wifi_info['CITY'] = unquote(ret[2]).decode("gbk")
-                                wifi_info['CITY_PY'] = ret[3]
-                                print(wifi_info)
-                                
-                                f = open('/data/file/wifi.txt', 'w') #以写的方式打开一个文件，没有该文件就自动新建
-                                f.write(json.dumps(wifi_info)) #写入数据
-                                f.close() #每次操作完记得关闭文件
-                                
-                                response = web_page()
-                                send_response(conn, response)
-                                
-                            else:#连接失败
-                                response = config_page()
-                                send_response(conn, response)
-                                d.Picture(0,0,"/data/picture/error2.jpg") #步骤2，登录192.168.4.1进行配网。
-                        
-                        else: #没该城市，重新配置
-                            
+                        d.fill(BLACK)
+                        d.printStr('Connecting...', 10, 50, RED, size=2)
+                        d.printStr(SSID, 10, 110, WHITE, size=2)
+                        #print(ret_ip)
+                        while not server.WIFI_Connect(SSID,PASSWORD)==True: #等待wifi连接             
+                            pass
+                        try:
+                            CITY = ip.get_ip_info()
+                            #保存WiFi信息到/data/file/wifi.txt,字典格式。
+                            wifi_info = {'SSID':'','PASSWORD':''}
+                            wifi_info['SSID'] = SSID
+                            wifi_info['PASSWORD'] = PASSWORD
+                            wifi_info['CITY'] = CITY
+                            print(wifi_info)
+                            f = open('/data/file/wifi.txt', 'w') #以写的方式打开一个文件，没有该文件就自动新建
+                            f.write(json.dumps(wifi_info)) #写入数据
+                            f.close() #每次操作完记得关闭文件    
+                            response = web_page()
+                            send_response(conn, response)  
+                        except:#连接失败
                             response = config_page()
                             send_response(conn, response)
-                            d.Picture(0,0,"/data/picture/error1.jpg") #步骤2，登录192.168.4.1进行配网。
+                            d.Picture(0,0,"/data/picture/error2.jpg") #步骤2，登录192.168.4.1进行配网
                             
                     else : #获取信息不成功
-                        
                         response = config_page()
                         send_response(conn, response)
-                        d.Picture(0,0,"/data/picture/error3.jpg") #步骤2，登录192.168.4.1进行配网。
+                        d.Picture(0,0,"/data/picture/error3.jpg") #步骤2，登录192.168.4.1进行配网
                     
                 elif url == "disconnect":
                     wlan_sta.disconnect()

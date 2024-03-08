@@ -1,10 +1,9 @@
 '''
 主功能文件
-Powered By XZJ
-Version 3.1.9
+Version 3.2.0
 '''
 print("boot")
-print('core 3.1.9')#可以注释掉
+print('core 3.2.0')
 #定义常用颜色
 RED = (255,0,0)
 GREEN = (0,255,0)
@@ -20,7 +19,6 @@ from tftlcd import LCD15
 ########################
 d = LCD15(portrait=1)
 d.fill(BLACK)
-# 开机文字，不需要可以注释
 d.printStr('Powered by',60,185,color=WHITE,size=1)
 d.printStr('Micropython',60,205,color=WHITE,size=2)
 d.printStr('PyClock',60,85,color=WHITE,size=3)
@@ -36,33 +34,45 @@ city=['','']
 weather = ['']*9
 total = 0
 lost = 0 
-state=0#系统自检状态码，0为boot,1为wifi,2为time,3为city，4为weather
-weather_state=0#天气状态，获取到天气为1反之为0
-time_state=0#时间状态，获取到时间为1反之为0
+state=0#系统状态，0为boot,1为wifi,2为time,3为city，4为weather
+weather_state=0#天气状态，连上为1反之为0
+time_state=0#时间状态，连上为1反之为0
 class server:
     datetime=rtc.datetime()
     def __init__(self,city):
         self.city=['','']
     #WIFI连接函数
-    def WIFI_Connect():
+    def WIFI_Connect(ssid,password):
         global state
         wlan = network.WLAN(network.STA_IF) #STA模式
         wlan.active(True)                   #激活接口
         start_time=time.time()              #记录时间做超时判断
-        f = open('/data/file/mode.txt','r',encoding = "utf-8")
-        k = f.read()
-        f.close()
-        f = open('/data/file/set.txt','r',encoding = "utf-8")
-        s = f.read()
-        f.close()
-        if not wlan.isconnected():
-            print('Connecting to network...')
-            f = open('/data/file/wifi.txt', 'r',encoding = "utf-8") #获取账号密码
-            info = json.loads(f.read())
-            f.close()
-            print(info)
+        if ssid=='p' or password=='p':
+            if not wlan.isconnected():
+                print('Connecting to network...')
+                f = open('/data/file/wifi.txt', 'r',encoding = "utf-8") #获取账号密码
+                info = json.loads(f.read())
+                f.close()
+                print(info)
+                try:
+                    wlan.connect(info['SSID'], info['PASSWORD']) #WIFI账号密码
+                    return True
+                except:           
+                    print('error')
+                    led.on()
+                    time.sleep_ms(300)
+                    led.off()
+                    time.sleep_ms(300)
+                    #超时判断,15秒没连接成功判定为超时
+                    if time.time()-start_time > 25:             
+                        wlan.active(False)
+                        #点亮led表示没连接上WiFi
+                        led.on()
+                        print('WIFI Connected Timeout!')
+                        return False 
+        else:
             try:
-                wlan.connect(info['SSID'], info['PASSWORD']) #WIFI账号密码
+                wlan.connect(ssid, password) #WIFI账号密码
                 return True
             except:           
                 print('error')
@@ -76,7 +86,7 @@ class server:
                     #点亮led表示没连接上WiFi
                     led.on()
                     print('WIFI Connected Timeout!')
-                    return False 
+                    return False
         #连接成功，熄灭led
         led.off()
         #串口打印信息
@@ -90,12 +100,6 @@ class server:
         ntptime.NTP_DELTA = 3155644800   # 可选 UTC+8偏移时间（秒），不设置就是UTC0
         ntptime.host = 'ntp1.aliyun.com'  # 可选，ntp服务器，默认是"pool.ntp.org"
         print("ntptime.host = 'ntp1.aliyun.com'")
-        f = open('/data/file/mode.txt','r',encoding = "utf-8")
-        k = f.read()
-        f.close()
-        f = open('/data/file/set.txt','r',encoding = "utf-8")
-        s = f.read()
-        f.close()
         try:
             ntptime.settime()   # 修改设备时间,到这就已经设置好了
             print('同步成功')
@@ -120,12 +124,6 @@ class server:
     def city_get():
         global city,state
         #获取城市编码
-        f = open('/data/file/mode.txt','r',encoding = "utf-8")
-        k = f.read()
-        f.close()
-        f = open('/data/file/set.txt','r',encoding = "utf-8")
-        s = f.read()
-        f.close()
         f = open('/data/file/wifi.txt', 'r',encoding = "utf-8") #获取账号密码
         info = json.loads(f.read())
         f.close()
@@ -255,7 +253,7 @@ class server:
             state+=1
             time.sleep_ms(1000)
     
-    def re(server): #返回各种值，在main.py文件中会调用
+    def re(server):
         global city,weather,weather_state,time_state,state
         datetime = rtc.datetime()
         if server=='city':
@@ -273,27 +271,21 @@ class server:
         else:
             return False
     
-    def screen(): #息屏
+    def screen():
         tftlcd.LCD15(portrait=1)
         print('screen off')
         time.sleep(0.1)
         d.fill(BLACK)
         tftlcd.LCD15(portrait=1)
     
-    def check(): #自检
+    def check():
         global state
-        f = open('/data/file/mode.txt','r',encoding = "utf-8")
-        k = f.read()
-        f.close()
-        f = open('/data/file/set.txt','r',encoding = "utf-8")
-        s = f.read()
-        f.close()
         if state==4:
             f = open('/data/file/mode.txt','w',encoding = "utf-8")
             f.write("run")
             f.close()
             
-    def info_print(): #打印天气
+    def info_print():
         global city,weather
         print(rtc.datetime())
         print('城市:',city[0],city[1])
@@ -308,3 +300,4 @@ class server:
         print('实时湿度:',weather[8])
         print('total:',total)
         print('lost:',lost)
+        
