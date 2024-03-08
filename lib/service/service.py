@@ -1,10 +1,10 @@
 '''
 主功能文件
 Powered By XZJ
-Version 3.1.9
+Version 3.2.0
 '''
 print("boot")
-print('core 3.1.9')
+print('core 3.2.0')
 #定义常用颜色
 RED = (255,0,0)
 GREEN = (0,255,0)
@@ -43,25 +43,37 @@ class server:
     def __init__(self,city):
         self.city=['','']
     #WIFI连接函数
-    def WIFI_Connect():
+    def WIFI_Connect(ssid,password):
         global state
         wlan = network.WLAN(network.STA_IF) #STA模式
         wlan.active(True)                   #激活接口
         start_time=time.time()              #记录时间做超时判断
-        f = open('/data/file/mode.txt','r',encoding = "utf-8")
-        k = f.read()
-        f.close()
-        f = open('/data/file/set.txt','r',encoding = "utf-8")
-        s = f.read()
-        f.close()
-        if not wlan.isconnected():
-            print('Connecting to network...')
-            f = open('/data/file/wifi.txt', 'r',encoding = "utf-8") #获取账号密码
-            info = json.loads(f.read())
-            f.close()
-            print(info)
+        if ssid=='p' or password=='p':
+            if not wlan.isconnected():
+                print('Connecting to network...')
+                f = open('/data/file/wifi.txt', 'r',encoding = "utf-8") #获取账号密码
+                info = json.loads(f.read())
+                f.close()
+                print(info)
+                try:
+                    wlan.connect(info['SSID'], info['PASSWORD']) #WIFI账号密码
+                    return True
+                except:           
+                    print('error')
+                    led.on()
+                    time.sleep_ms(300)
+                    led.off()
+                    time.sleep_ms(300)
+                    #超时判断,15秒没连接成功判定为超时
+                    if time.time()-start_time > 25:             
+                        wlan.active(False)
+                        #点亮led表示没连接上WiFi
+                        led.on()
+                        print('WIFI Connected Timeout!')
+                        return False 
+        else:
             try:
-                wlan.connect(info['SSID'], info['PASSWORD']) #WIFI账号密码
+                wlan.connect(ssid, password) #WIFI账号密码
                 return True
             except:           
                 print('error')
@@ -75,7 +87,7 @@ class server:
                     #点亮led表示没连接上WiFi
                     led.on()
                     print('WIFI Connected Timeout!')
-                    return False 
+                    return False
         #连接成功，熄灭led
         led.off()
         #串口打印信息
@@ -89,12 +101,6 @@ class server:
         ntptime.NTP_DELTA = 3155644800   # 可选 UTC+8偏移时间（秒），不设置就是UTC0
         ntptime.host = 'ntp1.aliyun.com'  # 可选，ntp服务器，默认是"pool.ntp.org"
         print("ntptime.host = 'ntp1.aliyun.com'")
-        f = open('/data/file/mode.txt','r',encoding = "utf-8")
-        k = f.read()
-        f.close()
-        f = open('/data/file/set.txt','r',encoding = "utf-8")
-        s = f.read()
-        f.close()
         try:
             ntptime.settime()   # 修改设备时间,到这就已经设置好了
             print('同步成功')
@@ -119,12 +125,6 @@ class server:
     def city_get():
         global city,state
         #获取城市编码
-        f = open('/data/file/mode.txt','r',encoding = "utf-8")
-        k = f.read()
-        f.close()
-        f = open('/data/file/set.txt','r',encoding = "utf-8")
-        s = f.read()
-        f.close()
         f = open('/data/file/wifi.txt', 'r',encoding = "utf-8") #获取账号密码
         info = json.loads(f.read())
         f.close()
@@ -281,12 +281,6 @@ class server:
     
     def check():
         global state
-        f = open('/data/file/mode.txt','r',encoding = "utf-8")
-        k = f.read()
-        f.close()
-        f = open('/data/file/set.txt','r',encoding = "utf-8")
-        s = f.read()
-        f.close()
         if state==4:
             f = open('/data/file/mode.txt','w',encoding = "utf-8")
             f.write("run")
@@ -307,3 +301,4 @@ class server:
         print('实时湿度:',weather[8])
         print('total:',total)
         print('lost:',lost)
+        

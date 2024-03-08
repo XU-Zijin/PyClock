@@ -190,7 +190,9 @@ def weather_display(city,weather):
     d.drawRect(44, 185, 48, 10, WHITE, border=2,fillcolor=BLACK)
     d.drawRect(46, 187, 25, 6, RED, border=2,fillcolor=RED)
     d.printStr('   ', 100, 177, BLACK, size=2) #消除重影
-    d.printStr(weather[7], 115-len(weather[7]*5), 177, RED, size=2)
+    a=weather[7].split('.')
+    b=" "+a[0]
+    d.printStr(b, 115-len(weather[7]*5), 177, RED, size=2)
     printChinese('℃',135,177,color=WHITE,backcolor=BLACK,size=2)
     
     #实时湿度

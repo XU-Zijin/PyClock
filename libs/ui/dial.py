@@ -9,6 +9,7 @@
 #导入相关模块
 import time,math
 from libs import global_var
+from lib.service.service import server
 ########################
 # 构建1.5寸LCD对象并初始化
 ########################
@@ -20,7 +21,7 @@ BLUE = (0,0,255)
 BLACK = (0,0,0)
 WHITE = (255,255,255)
 def background():#画出表盘
-    d.drawCircle(120, 120, 100, BLUE, border=3)
+    d.drawCircle(120, 120, 100, BLUE,border=5)
     for i in range(12):
         x0 = 120+round(95*math.sin(math.radians(i*30)))
         y0 = 120-round(95*math.cos(math.radians(i*30)))
@@ -76,4 +77,9 @@ def UI_Display(datetime):
         f.write("simple")
         f.close()
     datetime_display(datetime)
-#UI_Display(datetime)
+'''
+while True:
+    datetime = server.re('rtc')
+    UI_Display(datetime)
+'''
+

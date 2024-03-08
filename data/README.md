@@ -20,10 +20,10 @@ lib: 服务
         |---service:系统服务文件(core)
         |---led.py: 用于控制led灯
         |---system: 用于pyshell
+        |---ip.py: 根据IP地址自动获取天气
 
 libs: 项目Micropython库
     urllib: urequest库
-        |---parse.py
         |---urequest.py: 爬虫库
     
     |---ap.py: AP热点配网
