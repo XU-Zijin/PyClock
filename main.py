@@ -1,7 +1,7 @@
 '''
 主文件
 Powered By MicroPython
-Version 2.0.0
+Version 2.0.1
 '''
 
 print('Version 2.0.0')#可以注释掉
@@ -138,7 +138,6 @@ if sys==1:
                     default.UI_Display(city,weather,datetime)
                 elif ui==1:
                     dial.UI_Display(datetime) #极简表盘
-    #        print('gc2:',gc.mem_free()) #内存监测
             if ntpst==0:
                 server.sync_ntp()
                 datetime = server.re('rtc')
