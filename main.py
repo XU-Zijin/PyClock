@@ -4,7 +4,7 @@ Powered By MicroPython
 Version 2.0.1
 '''
 
-print('Version 2.0.0')#可以注释掉
+print('Version 2.0.1')#可以注释掉
 #导入相关模块
 from libs.ui import default
 from libs.ui import dial
