@@ -406,7 +406,7 @@ def UI_Display(city,weather,datetime):
     f.close()
     if global_var.UI_Change: #首次显示 
         global_var.UI_Change = 0
-        message_num = 0 
+        message_num = 0
         d.fill(BLACK) #清屏        
         weather_display(city,weather)
         message_display(weather,datetime)
@@ -426,7 +426,7 @@ def UI_Display(city,weather,datetime):
         if gc.mem_free() < 15000: #内存不足
             gc.collect() #回收内存
         d.Picture(165,165,"/data/picture/default/"+str(datetime[6]%4+1)+".jpg")
-        second2 = datetime[6]  
+        second2 = datetime[6]
     #动态信息显示刷新时间5秒
     if datetime[6]%5 == 0:    
         message_display(weather,datetime)

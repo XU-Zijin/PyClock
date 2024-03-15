@@ -1,11 +1,11 @@
 '''
 主文件
 Powered By MicroPython
-Version 2.0.0
+Version 6.3.2
 By XZJ
 '''
-
-print('Version 6.3.0')
+print('Powered By XZJ')
+print('Version 6.3.2')
 #导入相关模块
 from libs.ui import default
 from libs.ui import dial
@@ -13,6 +13,8 @@ from libs.ui import dial
 from lib.service.service import server
 from lib.service import led
 import time,os,machine,gc
+machine.freq(160000000)
+print(machine.freq())
 f = open('/data/file/mode.txt','w',encoding = "utf-8")
 f.write("boot")
 f.close()
@@ -26,7 +28,6 @@ from machine import Pin,WDT,Timer
 sys=0#系统状态，0为boot，1为run
 count=0
 ui_count=2
-ui=0#默认表盘
 #按键    
 KEY=Pin(9,Pin.IN,Pin.PULL_UP) #构建KEY对象
 #按键中断触发
@@ -54,12 +55,16 @@ def key(KEY):
             if time.ticks_ms() - start >2000:
                 if sys==1:
                     if count == 0:
-                        server.screen()
+                        server.screen_off()
                         f = open('/data/file/set.txt','w',encoding = "utf-8")
                         f.write('0')
                         f.close()
                         count += 1
+                        machine.freq(80000000)
+                        print('screen off')
+                        server.screen_off()
                     elif count == 1:
+                        machine.freq(160000000)
                         f = open('/data/file/set.txt','w',encoding = "utf-8")
                         f.write('1')
                         f.close()
@@ -116,6 +121,22 @@ server.check()
 gc.collect()
 sys=1
 tick = 61 #每秒刷新标志位
+if 'ui.txt' not in os.listdir('/data/file/'):
+    f = open('/data/file/ui.txt','w',encoding = "utf-8")#读取上次关机时的表盘
+    f.write('default')
+    f.close()
+    ui=0
+else:
+    f = open('/data/file/ui.txt','r',encoding = "utf-8")#读取上次关机时的表盘
+    k=f.read()
+    f.close()
+if len(k)==0:
+    ui=0
+else:
+    if k=='default':
+        ui=0#默认表盘
+    elif k=='dial':
+        ui=1
 f = open('/data/file/mode.txt','w',encoding = "utf-8")
 f.write("run")
 print("start")
@@ -126,11 +147,17 @@ if sys==1:
         #15分钟在线获取一次天气信息,顺便检测wifi是否掉线
         if datetime[5]%15 == 0 and datetime[6] == 0:
             led.on()
-            server.WIFI_Connect('p','p') #检查WiFi，掉线的话自动重连
-            server.weather_get(datetime)
-            weather=server.re('weather')
-            server.info_print()
-            gc.collect()
+            f = open('/data/file/set.txt','r',encoding = "utf-8")
+            screen_state=f.read()
+            f.close()
+            if screen_state=='0':
+                machine.freq(20000000)
+            else:
+                server.WIFI_Connect('p','p') #检查WiFi，掉线的话自动重连
+                server.weather_get(datetime)
+                weather=server.re('weather')
+                server.info_print()
+                gc.collect()
             led.off()
         #每秒刷新一次UI
         if tick != datetime[6]:
@@ -143,10 +170,16 @@ if sys==1:
             if s=='1' or s=='simple':
                 if ui==0:
                     default.UI_Display(city,weather,datetime)
+                    f = open('/data/file/ui.txt','w',encoding = "utf-8")#读取上次关机时的表盘
+                    f.write('default')
+                    f.close()
                 elif ui==1:
                     dial.UI_Display(datetime) #极简表盘
+                    f = open('/data/file/ui.txt','w',encoding = "utf-8")#读取上次关机时的表盘
+                    f.write('dial')
+                    f.close()
     #        print('gc2:',gc.mem_free()) #内存监测
             if ntpst==0:
                 server.sync_ntp()
                 datetime = server.re('rtc')
-        time.sleep_ms(200) 
+        #time.sleep_ms(200) 

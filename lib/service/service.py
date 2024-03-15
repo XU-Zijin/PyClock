@@ -272,11 +272,7 @@ class server:
         else:
             return False
     
-    def screen():
-        tftlcd.LCD15(portrait=1)
-        print('screen off')
-        time.sleep(0.1)
-        d.fill(BLACK)
+    def screen_off():
         tftlcd.LCD15(portrait=1)
     
     def check():
