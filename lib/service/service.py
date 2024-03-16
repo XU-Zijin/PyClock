@@ -1,10 +1,10 @@
 '''
 主功能文件
 Powered By XZJ
-Version 3.2.0
+Version 3.2.1
 '''
-print("boot")
-print('core 3.2.0')
+
+print('core 3.2.1')
 #定义常用颜色
 RED = (255,0,0)
 GREEN = (0,255,0)

@@ -9,12 +9,13 @@ print('Version 6.3.2')
 #导入相关模块
 from libs.ui import default
 from libs.ui import dial
+#from libs.ui import ticlock
 #导入server
 from lib.service.service import server
 from lib.service import led
 import time,os,machine,gc
 machine.freq(160000000)
-print(machine.freq())
+print("boot")
 f = open('/data/file/mode.txt','w',encoding = "utf-8")
 f.write("boot")
 f.close()
@@ -35,6 +36,7 @@ def key(KEY):
     global sys,count,ui,ui_count
     time.sleep_ms(10) #消除抖动
     if KEY.value() == 0: #确认按键被按下
+        machine.freq(160000000)
         if sys == 1:
             ui+=1
             f = open('/data/file/set.txt','w',encoding = "utf-8")
@@ -122,7 +124,7 @@ gc.collect()
 sys=1
 tick = 61 #每秒刷新标志位
 if 'ui.txt' not in os.listdir('/data/file/'):
-    f = open('/data/file/ui.txt','w',encoding = "utf-8")#读取上次关机时的表盘
+    f = open('/data/file/ui.txt','w',encoding = "utf-8")
     f.write('default')
     f.close()
     ui=0
@@ -137,6 +139,8 @@ else:
         ui=0#默认表盘
     elif k=='dial':
         ui=1
+    #elif k=='ticlock':
+        #ui=2
 f = open('/data/file/mode.txt','w',encoding = "utf-8")
 f.write("run")
 print("start")
@@ -147,17 +151,11 @@ if sys==1:
         #15分钟在线获取一次天气信息,顺便检测wifi是否掉线
         if datetime[5]%15 == 0 and datetime[6] == 0:
             led.on()
-            f = open('/data/file/set.txt','r',encoding = "utf-8")
-            screen_state=f.read()
-            f.close()
-            if screen_state=='0':
-                machine.freq(20000000)
-            else:
-                server.WIFI_Connect('p','p') #检查WiFi，掉线的话自动重连
-                server.weather_get(datetime)
-                weather=server.re('weather')
-                server.info_print()
-                gc.collect()
+            server.WIFI_Connect('p','p') #检查WiFi，掉线的话自动重连
+            server.weather_get(datetime)
+            weather=server.re('weather')
+            server.info_print()
+            gc.collect()
             led.off()
         #每秒刷新一次UI
         if tick != datetime[6]:
@@ -178,8 +176,13 @@ if sys==1:
                     f = open('/data/file/ui.txt','w',encoding = "utf-8")#读取上次关机时的表盘
                     f.write('dial')
                     f.close()
+                #elif ui==2:
+                    #ticlock.draw_clock()
+                    #f = open('/data/file/ui.txt','w',encoding = "utf-8")#读取上次关机时的表盘
+                    #f.write('ticlock')
+                    #f.close()
     #        print('gc2:',gc.mem_free()) #内存监测
             if ntpst==0:
                 server.sync_ntp()
                 datetime = server.re('rtc')
-        #time.sleep_ms(200) 
+        #time.sleep_ms(200)

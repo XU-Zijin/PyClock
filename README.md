@@ -19,6 +19,7 @@ data: 数据
         |---wifi.txt: 记录WiFi账户密码
         |---mode.txt: 系统状态文件
         |---set.txt: 系统状态文件
+		|---ui.txt: 记录上次关机表盘
 
 lib: 服务
 
@@ -27,7 +28,6 @@ lib: 服务
     |---service
         |---service.py:系统服务(core)
         |---led.py: 用于控制led灯
-        |---system.py: 用于pyshell(待开发)
         |---ip.py: 自动获取城市
 
 libs: 项目Micropython库
@@ -43,7 +43,7 @@ libs: 项目Micropython库
 
 其中service.py是相当于这个程序的核心，大部分功能从这里调用
 
-`注：因为system.py和devmode.py文件里的功能尚未开发或未开发完，使用时可以删除，不影响现有功能及稳定性`
+`注：因为devmode.py文件里的功能尚未开发完，使用时可以删除，不影响现有功能及稳定性`
 
 ## 代码分析
 
@@ -51,7 +51,7 @@ libs: 项目Micropython库
 
 首先`data`文件夹用于存放主题图片、字库、编码以及系统运行时所需的文件。
 
-`lib`文件夹中就是用于调试的`devmode.py`文件及用于系统大部分基础功能`service.py`文件，还有控制led的文件，最后还有一个是计划开发的`system.py`文件，我打算再这个开源硬件PyClock这个板子上实现一个终端功能，也就是pyshell。
+`lib`文件夹中就是用于调试的`devmode.py`文件及用于系统大部分基础功能`service.py`文件，还有控制led的文件，我打算用`devmode.py`这个文件在PyClock这个板子上实现一个终端功能，也就是pyshell。
 
 而`libs`里面就是各种所需的库了，还有表盘，也就是UI。
 
@@ -100,6 +100,8 @@ while not server.WIFI_Connect()==True:
 首次开机按照屏幕上显示的步骤进行配网，然后开机会进入到默认的太空人表盘，短按切换表盘，目前有两个表盘，按两秒息屏，长按5秒进入出厂设置。
 
 ## 版本说明
+
+V2.1.0修复已知的3个bug，添加新的表盘，删除不必要文件，在息屏超过15分钟时CPU频率为80MHz
 
 V2.0.1添加自动调整esp32的CPU频率以节省功耗，在正常情况下CPU频率为160MHz，在息屏时为80MHz，在息屏超过15分钟时为20MHz
 
