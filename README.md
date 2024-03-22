@@ -1,5 +1,5 @@
 # PyClock
-一个基于micropython的esp32项目
+一个基于esp32的micropython项目
 
 这是一个开源项目,原项目地址 https://github.com/01studio-lab/pyClock
 
@@ -19,6 +19,7 @@ data: 数据
         |---wifi.txt: 记录WiFi账户密码
         |---mode.txt: 系统状态文件
         |---set.txt: 系统状态文件
+		|---ui.txt: 记录上次关机时的表盘
 
 lib: 服务
 
@@ -59,6 +60,7 @@ libs: 项目Micropython库
 * 开机自动校准时间
 * 手机web配网
 * 自动获取城市
+* 表盘记忆
 
 ### service.py和led.py文件的调用说明
 
@@ -66,12 +68,7 @@ libs: 项目Micropython库
 
 使用`from lib.service.service import server`导入server库
 
-这两行代码用于联网
-
-```
-while not server.WIFI_Connect()==True:          
-    pass
-```
+`server.WIFI_Connect()`用于联网      
 
 `server.sync_ntp()`用于同步网络时钟
 
@@ -93,9 +90,11 @@ while not server.WIFI_Connect()==True:
 
 ## 如何使用
 
-首次开机按照屏幕上显示的步骤进行配网，然后开机会进入到默认的太空人表盘，短按切换表盘，目前有两个表盘，按两秒息屏，长按5秒进入出厂设置。
+首次开机按照屏幕上显示的步骤进行配网，然后首次开机会进入到默认的太空人表盘，若不是首次开机，则会进入上次关机时的表盘，短按切换表盘，目前有两个表盘，按2秒息屏，长按5秒进入出厂设置。
 
 ## 版本说明
+
+V2.1.0修复3个已知bug，修改dial表盘，添加表盘记忆功能，添加自动调节CPU频率功能，增加运行稳定性
 
 V2.0.1删除掉一些调试代码
 

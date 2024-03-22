@@ -1,9 +1,9 @@
 '''
 主功能文件
-Version 3.2.0
+Version 3.2.1
 '''
-print("boot")
-print('core 3.2.0')
+
+print('core 3.2.1')
 #定义常用颜色
 RED = (255,0,0)
 GREEN = (0,255,0)
@@ -50,12 +50,12 @@ class server:
         if ssid=='p' or password=='p':
             if not wlan.isconnected():
                 print('Connecting to network...')
-                f = open('/data/file/wifi.txt', 'r',encoding = "utf-8") #获取账号密码
+                f = open('/data/file/wifi.txt', 'r',encoding = "utf-8") #获取SSID and PASSWORD
                 info = json.loads(f.read())
                 f.close()
                 print(info)
                 try:
-                    wlan.connect(info['SSID'], info['PASSWORD']) #WIFI账号密码
+                    wlan.connect(info['SSID'], info['PASSWORD'])
                     return True
                 except:           
                     print('error')
@@ -271,11 +271,7 @@ class server:
         else:
             return False
     
-    def screen():
-        tftlcd.LCD15(portrait=1)
-        print('screen off')
-        time.sleep(0.1)
-        d.fill(BLACK)
+    def screen_off():
         tftlcd.LCD15(portrait=1)
     
     def check():

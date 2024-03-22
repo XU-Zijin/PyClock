@@ -1,10 +1,10 @@
 '''
 主文件
 Powered By MicroPython
-Version 2.0.1
+Version 2.1.0
 '''
 
-print('Version 2.0.1')#可以注释掉
+print('Version 2.1.0')
 #导入相关模块
 from libs.ui import default
 from libs.ui import dial
@@ -12,6 +12,8 @@ from libs.ui import dial
 from lib.service.service import server
 from lib.service import led
 import time,os,machine,gc
+machine.freq(160000000)
+print("boot")
 f = open('/data/file/mode.txt','w',encoding = "utf-8")
 f.write("boot")
 f.close()
@@ -33,6 +35,7 @@ def key(KEY):
     global sys,count,ui,ui_count
     time.sleep_ms(10) #消除抖动
     if KEY.value() == 0: #确认按键被按下
+        machine.freq(160000000)
         if sys == 1:
             ui+=1
             f = open('/data/file/set.txt','w',encoding = "utf-8")
@@ -47,12 +50,16 @@ def key(KEY):
             if time.ticks_ms() - start >2000: #按两秒息屏
                 if sys==1:
                     if count == 0:
-                        server.screen()
+                        server.screen_off()
                         f = open('/data/file/set.txt','w',encoding = "utf-8")
                         f.write('0')
                         f.close()
                         count += 1
+                        machine.freq(80000000)
+                        print('screen off')
+                        server.screen_off()
                     elif count == 1:
+                        machine.freq(160000000)
                         f = open('/data/file/set.txt','w',encoding = "utf-8")
                         f.write('1')
                         f.close()
@@ -60,6 +67,7 @@ def key(KEY):
                         print('screen on')
             if time.ticks_ms() - start >5000: #长按按键5秒恢复出厂设置  
                 led.on() #指示灯亮
+                machine.freq(160000000)
                 print("Factory Mode!")
                 cwu = 0
                 try:
@@ -74,8 +82,7 @@ def key(KEY):
                 except:
                     print('no wifi.txt')
                 print('Rebooting!')
-                #machine.reset() #重启开发板
-                import main #方便调试
+                machine.reset() #重启开发板
 KEY.irq(key,Pin.IRQ_FALLING) #定义中断，下降沿触发
 ################
 #    主程序    #
@@ -109,6 +116,21 @@ server.check()
 gc.collect()
 sys=1
 tick = 61 #每秒刷新标志位
+if 'ui.txt' not in os.listdir('/data/file/'):
+    f = open('/data/file/ui.txt','w',encoding = "utf-8")
+    f.write('default')
+    f.close()
+    ui=0
+f = open('/data/file/ui.txt','r',encoding = "utf-8")#读取上次关机时的表盘
+k=f.read()
+f.close()
+if len(k)==0:
+    ui=0
+else:
+    if k=='default':
+        ui=0#默认表盘
+    elif k=='dial':
+        ui=1
 f = open('/data/file/mode.txt','w',encoding = "utf-8")
 f.write("run")
 print("start")
@@ -136,9 +158,15 @@ if sys==1:
             if s=='1' or s=='simple':
                 if ui==0:
                     default.UI_Display(city,weather,datetime)
+                    f = open('/data/file/ui.txt','w',encoding = "utf-8")#读取上次关机时的表盘
+                    f.write('default')
+                    f.close()
                 elif ui==1:
                     dial.UI_Display(datetime) #极简表盘
+                    f = open('/data/file/ui.txt','w',encoding = "utf-8")#读取上次关机时的表盘
+                    f.write('dial')
+                    f.close()
             if ntpst==0:
                 server.sync_ntp()
                 datetime = server.re('rtc')
-        time.sleep_ms(200) 
+        time.sleep_ms(100) 
