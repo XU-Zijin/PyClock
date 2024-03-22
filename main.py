@@ -1,17 +1,18 @@
 '''
 主文件
 Powered By MicroPython
-Version 6.3.2
+Version 6.3.3
 By XZJ
 '''
 print('Powered By XZJ')
-print('Version 6.3.2')
+print('Version 6.3.3')
 #导入相关模块
 from libs.ui import default
 from libs.ui import dial
-#from libs.ui import ticlock
+from libs.ui import ticlock
 #导入server
 from lib.service.service import server
+server.start_screen()
 from lib.service import led
 import time,os,machine,gc
 machine.freq(160000000)
@@ -28,13 +29,13 @@ from libs import ap
 from machine import Pin,WDT,Timer
 sys=0#系统状态，0为boot，1为run
 count=0
-ui_count=2
+ui_count=3
 #按键    
 KEY=Pin(9,Pin.IN,Pin.PULL_UP) #构建KEY对象
 #按键中断触发
 def key(KEY):
     global sys,count,ui,ui_count
-    time.sleep_ms(10) #消除抖动
+    time.sleep_ms(10) #消除抖动server.WIFI_Connect('p','p')
     if KEY.value() == 0: #确认按键被按下
         machine.freq(160000000)
         if sys == 1:
@@ -42,7 +43,7 @@ def key(KEY):
             f = open('/data/file/set.txt','w',encoding = "utf-8")
             f.write("1")
             f.close()
-            if ui>1:
+            if ui>2:
                 ui=0
         elif sys == 0:
             from lib.develop import devmode
@@ -74,6 +75,7 @@ def key(KEY):
                         print('screen on')
             if time.ticks_ms() - start >5000: #长按按键5秒恢复出厂设置  
                 led.on() #指示灯亮
+                machine.freq(160000000)
                 print("Factory Mode!")
                 cwu = 0
                 try:
@@ -118,6 +120,7 @@ city=server.re('city')
 datetime = server.re('rtc')
 server.weather_get(datetime)
 weather=server.re('weather')
+#weather=['\u591a\u4e91', '19', '27', '\u591a\u4e91', '58', '\u5317\u98ce', '1', '21.1', '98']
 server.info_print()
 server.check()
 gc.collect()
@@ -128,10 +131,9 @@ if 'ui.txt' not in os.listdir('/data/file/'):
     f.write('default')
     f.close()
     ui=0
-else:
-    f = open('/data/file/ui.txt','r',encoding = "utf-8")#读取上次关机时的表盘
-    k=f.read()
-    f.close()
+f = open('/data/file/ui.txt','r',encoding = "utf-8")#读取上次关机时的表盘
+k=f.read()
+f.close()
 if len(k)==0:
     ui=0
 else:
@@ -139,8 +141,8 @@ else:
         ui=0#默认表盘
     elif k=='dial':
         ui=1
-    #elif k=='ticlock':
-        #ui=2
+    elif k=='ticlock':
+        ui=2
 f = open('/data/file/mode.txt','w',encoding = "utf-8")
 f.write("run")
 print("start")
@@ -154,6 +156,7 @@ if sys==1:
             server.WIFI_Connect('p','p') #检查WiFi，掉线的话自动重连
             server.weather_get(datetime)
             weather=server.re('weather')
+            #weather=['\u591a\u4e91', '19', '27', '\u591a\u4e91', '58', '\u5317\u98ce', '1', '21.1', '98']
             server.info_print()
             gc.collect()
             led.off()
@@ -176,13 +179,12 @@ if sys==1:
                     f = open('/data/file/ui.txt','w',encoding = "utf-8")#读取上次关机时的表盘
                     f.write('dial')
                     f.close()
-                #elif ui==2:
-                    #ticlock.draw_clock()
-                    #f = open('/data/file/ui.txt','w',encoding = "utf-8")#读取上次关机时的表盘
-                    #f.write('ticlock')
-                    #f.close()
+                elif ui==2:
+                    ticlock.draw_clock(datetime)
+                    f = open('/data/file/ui.txt','w',encoding = "utf-8")#读取上次关机时的表盘
+                    f.write('ticlock')
+                    f.close()
     #        print('gc2:',gc.mem_free()) #内存监测
             if ntpst==0:
                 server.sync_ntp()
                 datetime = server.re('rtc')
-        #time.sleep_ms(200)

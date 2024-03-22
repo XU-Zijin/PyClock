@@ -1,1 +1,1 @@
-{"SSID":"","PASSWORD":"","CITY":""}
+{"SSID":"12345","PASSWORD":"12345","CITY":"广州"}

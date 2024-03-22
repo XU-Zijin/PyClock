@@ -19,10 +19,6 @@ from tftlcd import LCD15
 # 构建1.5寸LCD对象并初始化
 ########################
 d = LCD15(portrait=1)
-d.fill(BLACK)
-d.printStr('Powered by',60,185,color=WHITE,size=1)
-d.printStr('Micropython',60,205,color=WHITE,size=2)
-d.printStr('PyClock',60,85,color=WHITE,size=3)
 from machine import RTC,Pin,Timer
 import time,math,ntptime,network,re,json,machine,gc,os,tftlcd
 from libs.urllib import urequest
@@ -42,6 +38,11 @@ class server:
     datetime=rtc.datetime()
     def __init__(self,city):
         self.city=['','']
+    def start_screen():
+        d.fill(BLACK)
+        d.printStr('Powered by',60,185,color=WHITE,size=1)
+        d.printStr('Micropython',60,205,color=WHITE,size=2)
+        d.printStr('PyClock',60,85,color=WHITE,size=3)
     #WIFI连接函数
     def WIFI_Connect(ssid,password):
         global state
@@ -51,12 +52,12 @@ class server:
         if ssid=='p' or password=='p':
             if not wlan.isconnected():
                 print('Connecting to network...')
-                f = open('/data/file/wifi.txt', 'r',encoding = "utf-8") #获取账号密码
+                f = open('/data/file/wifi.txt', 'r',encoding = "utf-8") #获取SSID and PASSWORD
                 info = json.loads(f.read())
                 f.close()
                 print(info)
                 try:
-                    wlan.connect(info['SSID'], info['PASSWORD']) #WIFI账号密码
+                    wlan.connect(info['SSID'], info['PASSWORD'])
                     return True
                 except:           
                     print('error')

@@ -40,6 +40,7 @@ libs: 项目Micropython库
     ui：UI主题库 
         |---dial.py: 极简表盘
         |---default.py: 默认表盘
+		|---ticlock.py: 极简时钟表盘
 
 其中service.py是相当于这个程序的核心，大部分功能从这里调用
 
@@ -67,6 +68,7 @@ libs: 项目Micropython库
 * 开机自动校准时间
 * 手机web配网
 * 自动获取城市
+* 表盘记忆
 
 ### service.py和led.py文件的调用说明
 
@@ -74,10 +76,7 @@ libs: 项目Micropython库
 
 使用`from lib.service.service import server`导入server库
 
-这两行代码用于联网
-
-while not server.WIFI_Connect()==True:          
-    pass
+`server.WIFI_Connect()`用于联网      
 
 `server.sync_ntp()`用于同步网络时钟
 
@@ -97,9 +96,11 @@ while not server.WIFI_Connect()==True:
 
 ## 怎么使用
 
-首次开机按照屏幕上显示的步骤进行配网，然后开机会进入到默认的太空人表盘，短按切换表盘，目前有两个表盘，按两秒息屏，长按5秒进入出厂设置。
+首次开机按照屏幕上显示的步骤进行配网，然后首次开机会进入到默认的太空人表盘，若不是首次开机，则会进入上次关机时的表盘，短按切换表盘，目前有两个表盘，按2秒息屏，长按5秒进入出厂设置。
 
 ## 版本说明
+
+V2.2.0修复1个已知bug，添加表盘记忆功能，新增1个表盘
 
 V2.1.0修复已知的3个bug，添加新的表盘，删除不必要文件，在息屏超过15分钟时CPU频率为80MHz
 
