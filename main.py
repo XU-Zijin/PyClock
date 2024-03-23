@@ -1,20 +1,18 @@
 '''
 主文件
 Powered By MicroPython
-Version 6.3.3
+Version 6.3.19
 By XZJ
 '''
 print('Powered By XZJ')
-print('Version 6.3.3')
-#导入相关模块
-from libs.ui import default
-from libs.ui import dial
-from libs.ui import ticlock
+print('Version 6.3.19')
+
 #导入server
 from lib.service.service import server
 server.start_screen()
+#导入相关模块
 from lib.service import led
-import time,os,machine,gc
+import time,os,machine,gc,json
 machine.freq(160000000)
 print("boot")
 f = open('/data/file/mode.txt','w',encoding = "utf-8")
@@ -24,12 +22,12 @@ f.close()
 f = open('/data/file/set.txt','w',encoding = "utf-8")
 f.write("simple")
 f.close()
-
-from libs import ap
 from machine import Pin,WDT,Timer
 sys=0#系统状态，0为boot，1为run
 count=0
 ui_count=3
+first_light=[0,0,0]
+get_time=0#获取时间次数
 #按键    
 KEY=Pin(9,Pin.IN,Pin.PULL_UP) #构建KEY对象
 #按键中断触发
@@ -105,6 +103,7 @@ while 'wifi.txt' not in os.listdir('/data/file/'):
     f = open('/data/file/set.txt','w',encoding = "utf-8")
     f.write("simple")
     f.close()
+    from libs import ap
     ap.startAP() #启动AP配网模式
 #启动看门狗，超时30秒。
 #wdt = WDT(timeout=30000)
@@ -120,7 +119,6 @@ city=server.re('city')
 datetime = server.re('rtc')
 server.weather_get(datetime)
 weather=server.re('weather')
-#weather=['\u591a\u4e91', '19', '27', '\u591a\u4e91', '58', '\u5317\u98ce', '1', '21.1', '98']
 server.info_print()
 server.check()
 gc.collect()
@@ -150,13 +148,15 @@ if sys==1:
     while True:
         #获取时间
         datetime = server.re('rtc')
+        lst_datetime = list(datetime)
+        f = open('/data/file/datetime.txt', 'w') #以写的方式打开一个文件，没有该文件就自动新建
+        f.write(json.dumps(datetime)) #写入数据
         #15分钟在线获取一次天气信息,顺便检测wifi是否掉线
         if datetime[5]%15 == 0 and datetime[6] == 0:
             led.on()
             server.WIFI_Connect('p','p') #检查WiFi，掉线的话自动重连
             server.weather_get(datetime)
             weather=server.re('weather')
-            #weather=['\u591a\u4e91', '19', '27', '\u591a\u4e91', '58', '\u5317\u98ce', '1', '21.1', '98']
             server.info_print()
             gc.collect()
             led.off()
@@ -170,21 +170,34 @@ if sys==1:
             f.close()
             if s=='1' or s=='simple':
                 if ui==0:
+                    if first_light[0]==0:
+                        from libs.ui import default
+                        first_light[0]=1
                     default.UI_Display(city,weather,datetime)
                     f = open('/data/file/ui.txt','w',encoding = "utf-8")#读取上次关机时的表盘
                     f.write('default')
                     f.close()
                 elif ui==1:
+                    if first_light[1]==0:
+                        from libs.ui import dial
+                        first_light[1]=1
                     dial.UI_Display(datetime) #极简表盘
                     f = open('/data/file/ui.txt','w',encoding = "utf-8")#读取上次关机时的表盘
                     f.write('dial')
                     f.close()
                 elif ui==2:
+                    if first_light[2]==0:
+                        from libs.ui import ticlock
+                        first_light[2]=1
                     ticlock.draw_clock(datetime)
                     f = open('/data/file/ui.txt','w',encoding = "utf-8")#读取上次关机时的表盘
                     f.write('ticlock')
                     f.close()
     #        print('gc2:',gc.mem_free()) #内存监测
             if ntpst==0:
-                server.sync_ntp()
-                datetime = server.re('rtc')
+                if get_time < 10:
+                    server.sync_ntp()
+                    datetime = server.re('rtc')
+                else:
+                    pass
+                get_time+=1

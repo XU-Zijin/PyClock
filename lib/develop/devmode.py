@@ -43,36 +43,3 @@ KEY.irq(key,Pin.IRQ_FALLING) #定义中断，下降沿触发
 ################
 sys=1
 print('start')
-d.fill(BLACK)
-d.printStr('Login:',0,0,color=WHITE,size=2)
-print('Login:')
-user_name='root'
-user_login=input()
-d.printStr(user_login,75,0,color=GREEN,size=2)
-passward='123'
-d.printStr('Passward:',0,25,color=WHITE,size=2)
-print('Passward:')
-user_passward=input()
-if user_passward==passward and user_login==user_name:
-    print('welcome!')
-    d.fill(BLACK)
-    d.printStr('>>> ',0,0,color=GREEN,size=2)
-    print('Type "help()" for more information.')
-    
-else:
-    count=1
-    while True:
-        d.printStr('passward wrong',0,50,color=RED,size=2)
-        print("passward wrong")
-        d.printStr('Passward:',0,25,color=WHITE,size=2)
-        print('Passward:')
-        user_passward=input()
-        if user_passward==passward and user_login==user_name:
-            break
-        else:
-            count+=1
-    print('welcome!')
-    d.fill(BLACK)
-    d.printStr('>>> ',0,0,color=GREEN,size=2)
-    print('Type "help()" for more information.')
-    
