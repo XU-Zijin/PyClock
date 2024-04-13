@@ -1,7 +1,7 @@
 '''
 实验名称：UI1
-版本：v2.1
-日期：2024.3
+版本：v2.2
+日期：2024.4
 作者：XZJ
 说明：极简时钟
 '''
@@ -86,6 +86,7 @@ def UI_Display(datetime):
         f.write("simple")
         f.close()
     datetime_display(datetime)
+
 
 '''
 while True:

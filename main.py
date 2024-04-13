@@ -1,12 +1,13 @@
 '''
 主文件
 Powered By MicroPython
-Version 6.3.19
+Version 6.3.20
 By XZJ
 '''
 print('Powered By XZJ')
-print('Version 6.3.19')
-
+print('Version 6.3.20')
+import network
+sta_if = network.WLAN(network.STA_IF)
 #导入server
 from lib.service.service import server
 server.start_screen()
@@ -26,13 +27,14 @@ from machine import Pin,WDT,Timer
 sys=0#系统状态，0为boot，1为run
 count=0
 ui_count=3
+ui_cp=None
 first_light=[0,0,0]
 get_time=0#获取时间次数
 #按键    
 KEY=Pin(9,Pin.IN,Pin.PULL_UP) #构建KEY对象
 #按键中断触发
 def key(KEY):
-    global sys,count,ui,ui_count
+    global sys,count,ui,ui_count,ui_cp
     time.sleep_ms(10) #消除抖动server.WIFI_Connect('p','p')
     if KEY.value() == 0: #确认按键被按下
         machine.freq(160000000)
@@ -41,6 +43,13 @@ def key(KEY):
             f = open('/data/file/set.txt','w',encoding = "utf-8")
             f.write("1")
             f.close()
+            if count == 1:
+                machine.freq(160000000)
+                ui=ui_cp
+                f = open('/data/file/set.txt','w',encoding = "utf-8")
+                f.write('1')
+                count = 0
+                print('screen on')
             if ui>2:
                 ui=0
         elif sys == 0:
@@ -64,13 +73,7 @@ def key(KEY):
                         machine.freq(80000000)
                         print('screen off')
                         server.screen_off()
-                    elif count == 1:
-                        machine.freq(160000000)
-                        f = open('/data/file/set.txt','w',encoding = "utf-8")
-                        f.write('1')
-                        f.close()
-                        count = 0
-                        print('screen on')
+                        ui_cp=ui-1
             if time.ticks_ms() - start >5000: #长按按键5秒恢复出厂设置  
                 led.on() #指示灯亮
                 machine.freq(160000000)
@@ -137,10 +140,16 @@ if len(k)==0:
 else:
     if k=='default':
         ui=0#默认表盘
+        from libs.ui import default
+        first_light[0]=1
     elif k=='dial':
         ui=1
+        from libs.ui import dial
+        first_light[1]=1
     elif k=='ticlock':
         ui=2
+        from libs.ui import ticlock
+        first_light[2]=1
 f = open('/data/file/mode.txt','w',encoding = "utf-8")
 f.write("run")
 print("start")
@@ -193,7 +202,6 @@ if sys==1:
                     f = open('/data/file/ui.txt','w',encoding = "utf-8")#读取上次关机时的表盘
                     f.write('ticlock')
                     f.close()
-    #        print('gc2:',gc.mem_free()) #内存监测
             if ntpst==0:
                 if get_time < 10:
                     server.sync_ntp()
@@ -201,3 +209,13 @@ if sys==1:
                 else:
                     pass
                 get_time+=1
+            mem_bytes = gc.mem_free()
+            # 转换为千字节
+            mem_kilobytes = mem_bytes / 1024
+            print(f"Memory Free: {mem_kilobytes} KB")
+            freq=machine.freq()
+            freq_mhz=freq//1000000
+            print(f"CPU: {freq_mhz} MHz")
+            rssi = sta_if.status('rssi')
+            print("RSSI: {}".format(rssi),'dB')
+            print(ui,ui_cp)
