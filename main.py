@@ -35,7 +35,7 @@ KEY=Pin(9,Pin.IN,Pin.PULL_UP) #构建KEY对象
 #按键中断触发
 def key(KEY):
     global sys,count,ui,ui_count,ui_cp
-    time.sleep_ms(10) #消除抖动server.WIFI_Connect('p','p')
+    time.sleep_ms(10) #消除抖动
     if KEY.value() == 0: #确认按键被按下
         machine.freq(160000000)
         if sys == 1:
@@ -160,6 +160,7 @@ if sys==1:
         lst_datetime = list(datetime)
         f = open('/data/file/datetime.txt', 'w') #以写的方式打开一个文件，没有该文件就自动新建
         f.write(json.dumps(datetime)) #写入数据
+        f.close()
         #15分钟在线获取一次天气信息,顺便检测wifi是否掉线
         if datetime[5]%15 == 0 and datetime[6] == 0:
             led.on()
