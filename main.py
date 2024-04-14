@@ -1,17 +1,16 @@
 '''
 主文件
 Powered By MicroPython
-Version 2.1.0
+Version 2.1.1
 '''
 
-print('Version 2.1.0')
-#导入相关模块
-from libs.ui import default
-from libs.ui import dial
+print('Version 2.1.1')
 #导入server
 from lib.service.service import server
+server.start_screen()
+#导入相关模块
 from lib.service import led
-import time,os,machine,gc
+import time,os,machine,gc,json
 machine.freq(160000000)
 print("boot")
 f = open('/data/file/mode.txt','w',encoding = "utf-8")
@@ -22,17 +21,18 @@ f = open('/data/file/set.txt','w',encoding = "utf-8")
 f.write("simple")
 f.close()
 
-from libs import ap
 from machine import Pin,WDT,Timer #WDT为看门狗模块,如有调试需要，请注释
 sys=0#系统状态，0为boot，1为run
 count=0
-ui_count=2
-ui=0#默认表盘
+ui_count=3
+ui_cp=None
+first_light=[0,0,0]
+get_time=0#获取时间次数
 #按键    
 KEY=Pin(9,Pin.IN,Pin.PULL_UP) #构建KEY对象
 #按键中断触发
 def key(KEY):
-    global sys,count,ui,ui_count
+    global sys,count,ui,ui_count,ui_cp
     time.sleep_ms(10) #消除抖动
     if KEY.value() == 0: #确认按键被按下
         machine.freq(160000000)
@@ -41,13 +41,26 @@ def key(KEY):
             f = open('/data/file/set.txt','w',encoding = "utf-8")
             f.write("1")
             f.close()
-            if ui>1:
+            if count == 1:
+                machine.freq(160000000)
+                ui=ui_cp
+                f = open('/data/file/set.txt','w',encoding = "utf-8")
+                f.write('1')
+                count = 0
+                print('screen on')
+            if ui>2:
                 ui=0
+        elif sys == 0:
+            from lib.develop import devmode
+            f = open('/data/file/set.txt','w',encoding = "utf-8")
+            f.write("dev")
+            f.close()
+            mode.run()
         gc.collect()
         #长按
         start = time.ticks_ms()
         while KEY.value() == 0:
-            if time.ticks_ms() - start >2000: #按两秒息屏
+            if time.ticks_ms() - start >2000:
                 if sys==1:
                     if count == 0:
                         server.screen_off()
@@ -58,13 +71,7 @@ def key(KEY):
                         machine.freq(80000000)
                         print('screen off')
                         server.screen_off()
-                    elif count == 1:
-                        machine.freq(160000000)
-                        f = open('/data/file/set.txt','w',encoding = "utf-8")
-                        f.write('1')
-                        f.close()
-                        count = 0
-                        print('screen on')
+                        ui_cp=ui-1
             if time.ticks_ms() - start >5000: #长按按键5秒恢复出厂设置  
                 led.on() #指示灯亮
                 machine.freq(160000000)
@@ -96,6 +103,7 @@ while 'wifi.txt' not in os.listdir('/data/file/'):
     f = open('/data/file/set.txt','w',encoding = "utf-8")
     f.write("simple")
     f.close()
+    from libs import ap
     ap.startAP() #启动AP配网模式
 #启动看门狗，超时30秒。
 wdt = WDT(timeout=30000)#如有调试需要,请注释
@@ -129,8 +137,16 @@ if len(k)==0:
 else:
     if k=='default':
         ui=0#默认表盘
+        from libs.ui import default
+        first_light[0]=1
     elif k=='dial':
         ui=1
+        from libs.ui import dial
+        first_light[1]=1
+    elif k=='ticlock':
+        ui=2
+        from libs.ui import ticlock
+        first_light[2]=1
 f = open('/data/file/mode.txt','w',encoding = "utf-8")
 f.write("run")
 print("start")
@@ -138,6 +154,10 @@ if sys==1:
     while True:
         #获取时间
         datetime = server.re('rtc')
+        lst_datetime = list(datetime)
+        f = open('/data/file/datetime.txt', 'w') #以写的方式打开一个文件，没有该文件就自动新建
+        f.write(json.dumps(datetime)) #写入数据
+        f.close()
         #15分钟在线获取一次天气信息,顺便检测wifi是否掉线
         if datetime[5]%15 == 0 and datetime[6] == 0:
             led.on()
@@ -157,16 +177,34 @@ if sys==1:
             f.close()
             if s=='1' or s=='simple':
                 if ui==0:
+                    if first_light[0]==0:
+                        from libs.ui import default
+                        first_light[0]=1
                     default.UI_Display(city,weather,datetime)
                     f = open('/data/file/ui.txt','w',encoding = "utf-8")#读取上次关机时的表盘
                     f.write('default')
                     f.close()
                 elif ui==1:
+                    if first_light[1]==0:
+                        from libs.ui import dial
+                        first_light[1]=1
                     dial.UI_Display(datetime) #极简表盘
                     f = open('/data/file/ui.txt','w',encoding = "utf-8")#读取上次关机时的表盘
                     f.write('dial')
                     f.close()
+                elif ui==2:
+                    if first_light[2]==0:
+                        from libs.ui import ticlock
+                        first_light[2]=1
+                    ticlock.draw_clock(datetime)
+                    f = open('/data/file/ui.txt','w',encoding = "utf-8")#读取上次关机时的表盘
+                    f.write('ticlock')
+                    f.close()
             if ntpst==0:
-                server.sync_ntp()
-                datetime = server.re('rtc')
+                if get_time < 10:
+                    server.sync_ntp()
+                    datetime = server.re('rtc')
+                else:
+                    pass
+                get_time+=1
         time.sleep_ms(100) 

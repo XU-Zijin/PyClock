@@ -1,9 +1,9 @@
 '''
 主功能文件
-Version 3.2.1
+Version 3.2.3
 '''
 
-print('core 3.2.1')
+print('core 3.2.3')
 #定义常用颜色
 RED = (255,0,0)
 GREEN = (0,255,0)
@@ -18,10 +18,6 @@ from tftlcd import LCD15
 # 构建1.5寸LCD对象并初始化
 ########################
 d = LCD15(portrait=1)
-d.fill(BLACK)
-d.printStr('Powered by',60,185,color=WHITE,size=1)
-d.printStr('Micropython',60,205,color=WHITE,size=2)
-d.printStr('PyClock',60,85,color=WHITE,size=3)
 from machine import RTC,Pin,Timer
 import time,math,ntptime,network,re,json,machine,gc,os,tftlcd
 from libs.urllib import urequest
@@ -41,6 +37,11 @@ class server:
     datetime=rtc.datetime()
     def __init__(self,city):
         self.city=['','']
+    def start_screen():
+        d.fill(BLACK)
+        d.printStr('Powered by',60,185,color=WHITE,size=1)
+        d.printStr('Micropython',60,205,color=WHITE,size=2)
+        d.printStr('PyClock',60,85,color=WHITE,size=3)
     #WIFI连接函数
     def WIFI_Connect(ssid,password):
         global state
@@ -105,6 +106,11 @@ class server:
             print('同步成功')
             print(rtc.datetime())
             print("同步后本地时间：%s" %str(time.localtime()))
+            datetime=rtc.datetime()
+            lst_datetime = list(datetime)
+            f = open('/data/file/datetime.txt', 'w') #以写的方式打开一个文件，没有该文件就自动新建
+            f.write(json.dumps(datetime)) #写入数据
+            f.close() #每次操作完记得关闭文件 
             led.off()
             state+=1
             time_state=1
@@ -116,7 +122,15 @@ class server:
                 led.off()             
                 time.sleep(0.1)
             print('同步失败')
-            print(rtc.datetime())
+            if 'datetime.txt' in os.listdir('/data/file/'):
+                f = open('/data/file/datetime.txt', 'r',encoding = "utf-8")
+                loaded_lst = json.loads(f.read())
+                f.close()
+                datetime = tuple(loaded_lst)
+                print(datetime)
+                rtc.datetime(datetime)
+            else:
+                print(rtc.datetime())
             print("未同步网络时间","正在使用本地时间：%s" %str(time.localtime()))
             time_state=0
             return False
@@ -244,14 +258,21 @@ class server:
                         break 
                 total = total+1
                 weather_state=1
+                f = open('/data/file/weather.txt', 'w') #以写的方式打开一个文件，没有该文件就自动新建
+                f.write(json.dumps(weather)) #写入数据
+                f.close() #每次操作完记得关闭文件 
                 return None
             except:
-                print("Can not get weather!",i)
+                print("Can not get weather!")
+                print("Not online")
                 lost = lost + 1
                 weather_state=0
+                if 'datetime.txt' in os.listdir('/data/file/'):
+                    f = open('/data/file/weather.txt', 'r',encoding = "utf-8")
+                    weather = json.loads(f.read())
+                    f.close()
                 gc.collect() #内存回收
             state+=1
-            time.sleep_ms(1000)
     
     def re(server):
         global city,weather,weather_state,time_state,state
@@ -296,4 +317,3 @@ class server:
         print('实时湿度:',weather[8])
         print('total:',total)
         print('lost:',lost)
-        
