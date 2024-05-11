@@ -1,11 +1,10 @@
 '''
 主文件
 Powered By MicroPython
-Version 6.3.20
+Version 6.3.21
 By XZJ
 '''
-print('Powered By XZJ')
-print('Version 6.3.20')
+print('Version 6.3.21')
 import network
 sta_if = network.WLAN(network.STA_IF)
 #导入server
