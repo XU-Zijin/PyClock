@@ -38,6 +38,9 @@ def datetime_display(datetime):
     second = datetime[6]
     minute = datetime[5]
     hour = datetime[4]
+    # 显示时间文字
+    time_str = "{:02d}:{:02d}".format(hour, minute, second)
+    d.printStr(time_str, center_x - 30, center_y + 50, WHITE, size=2)
     #秒钟处理
     #清除上一帧
     x0 = 120+round(100*math.sin(math.radians(second*6-6)))
@@ -66,9 +69,6 @@ def datetime_display(datetime):
     y1 = 120-round(75*math.cos(math.radians(hour*30+int(minute/12)*6)))
     d.drawLine(x1, y1, 120, 120, QINGDU)
     d.drawCircle(120, 120, 4, YELLOW, border=10)
-    # 显示时间文字
-    time_str = "{:02d}:{:02d}".format(hour, minute, second)
-    d.printStr(time_str, center_x - 30, center_y + 50, WHITE, size=2)
 def draw_clock(datetime):
     if global_var.UI_Change: #首次画表盘
         global_var.UI_Change = 0        

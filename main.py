@@ -1,10 +1,10 @@
 '''
 主文件
 Powered By MicroPython
-Version 2.1.1
+Version 2.1.2
 '''
 
-print('Version 2.1.1')
+print('Version 2.1.2')
 #导入server
 from lib.service.service import server
 server.start_screen()
