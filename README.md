@@ -25,8 +25,6 @@ data: 数据
 
 lib: 服务
 
-    |---develop
-        |---devmode.py: 开发者模式(正在开发中)
     |---service
         |---service.py:系统服务(core)
         |---led.py: 用于控制led灯
@@ -45,7 +43,6 @@ libs: 项目Micropython库
 
 其中service.py是相当于这个程序的核心，大部分功能从这里调用
 
-`注：因为devmode.py文件里的功能尚未开发完，使用时可以删除，不影响现有功能及稳定性`
 
 ## 代码分析
 
@@ -78,6 +75,8 @@ libs: 项目Micropython库
 
 使用`from lib.service.service import server`导入server库
 
+使用`server=Server()`来创建对象
+
 `server.WIFI_Connect()`用于联网      
 
 `server.sync_ntp()`用于同步网络时钟
@@ -101,6 +100,8 @@ libs: 项目Micropython库
 首次开机按照屏幕上显示的步骤进行配网，然后首次开机会进入到默认的太空人表盘，若不是首次开机，则会进入上次关机时的表盘，短按切换表盘，目前有两个表盘，按2秒息屏，长按5秒进入出厂设置。
 
 ## 版本说明
+
+V3.0.0重写service.py，规范代码格式，添加注释说明，优化了性能，删除devlop模式
 
 V2.3.2调整ticlock表盘渲染顺序
 
