@@ -1,10 +1,10 @@
 '''
 主功能文件
 Powered By XZJ
-Version 3.2.3
+Version 4.0.0
 '''
 
-print('core 3.2.3')
+print('core 4.0.0')
 #定义常用颜色
 RED = (255,0,0)
 GREEN = (0,255,0)
@@ -27,34 +27,31 @@ os.uname()
 led.on()
 # 初始化 RTC
 rtc = RTC()
-city=['','']
-weather = ['']*9
-total = 0
-lost = 0 
-state=0#系统状态，0为boot,1为wifi,2为time,3为city，4为weather
-weather_state=0#天气状态，连上为1反之为0
-time_state=0#时间状态，连上为1反之为0
-class server:
+class Server:
     datetime=rtc.datetime()
-    def __init__(self,city):
-        self.city=['','']
-    def start_screen():
+    city=['','']
+    weater=['']*9
+    def __init__(self,total=0,lost=0,state=0,weather_state=0,rtc_state=0):
+        self.total=total
+        self.lost=lost
+        self.state=state                 #系统状态，0为boot,1为wifi,2为time,3为city，4为weather
+        Server.weather_state=weather_state #天气状态，连上为1反之为0
+        self.rtc_state=rtc_state       #时间状态，连上为1反之为0
+    def start_screen(self):
         d.fill(BLACK)
         d.printStr('Powered by',60,185,color=WHITE,size=1)
         d.printStr('Micropython',60,205,color=WHITE,size=2)
         d.printStr('PyClock',60,85,color=WHITE,size=3)
     #WIFI连接函数
-    def WIFI_Connect(ssid,password):
-        global state
+    def WIFI_Connect(self,ssid,password):
         wlan = network.WLAN(network.STA_IF) #STA模式
         wlan.active(True)                   #激活接口
         start_time=time.time()              #记录时间做超时判断
         if ssid=='p' or password=='p':
             if not wlan.isconnected():
                 print('Connecting to network...')
-                f = open('/data/file/wifi.txt', 'r',encoding = "utf-8") #获取SSID and PASSWORD
-                info = json.loads(f.read())
-                f.close()
+                with open('/data/file/wifi.txt', 'r',encoding = "utf-8") as f: #获取SSID and PASSWORD
+                    info = json.loads(f.read())
                 print(info)
                 try:
                     wlan.connect(info['SSID'], info['PASSWORD'])
@@ -92,13 +89,12 @@ class server:
         #连接成功，熄灭led
         led.off()
         #串口打印信息
-        state+=1
+        self.state+=1
         print('network information:', wlan.ifconfig())
         return True
     
     # 同步时间
-    def sync_ntp():
-        global state,time_state
+    def sync_ntp(self):
         ntptime.NTP_DELTA = 3155644800   # 可选 UTC+8偏移时间（秒），不设置就是UTC0
         ntptime.host = 'ntp1.aliyun.com'  # 可选，ntp服务器，默认是"pool.ntp.org"
         print("ntptime.host = 'ntp1.aliyun.com'")
@@ -109,12 +105,11 @@ class server:
             print("同步后本地时间：%s" %str(time.localtime()))
             datetime=rtc.datetime()
             lst_datetime = list(datetime)
-            f = open('/data/file/datetime.txt', 'w') #以写的方式打开一个文件，没有该文件就自动新建
-            f.write(json.dumps(datetime)) #写入数据
-            f.close() #每次操作完记得关闭文件 
+            with open('/data/file/datetime.txt', 'w') as f: #以写的方式打开一个文件，没有该文件就自动新建
+                f.write(json.dumps(datetime)) #写入数据 
             led.off()
-            state+=1
-            time_state=1
+            self.state+=1
+            self.rtc_state=1
             return True
         except:
             for i in range(6):
@@ -124,33 +119,30 @@ class server:
                 time.sleep(0.1)
             print('同步失败')
             if 'datetime.txt' in os.listdir('/data/file/'):
-                f = open('/data/file/datetime.txt', 'r',encoding = "utf-8")
-                loaded_lst = json.loads(f.read())
-                f.close()
+                with open('/data/file/datetime.txt', 'r',encoding = "utf-8") as f:
+                    loaded_lst = json.loads(f.read())
                 datetime = tuple(loaded_lst)
                 print(datetime)
                 rtc.datetime(datetime)
             else:
                 print(rtc.datetime())
             print("未同步网络时间","正在使用本地时间：%s" %str(time.localtime()))
-            time_state=0
+            self.rtc_state=0
             return False
     #获取城市信息
-    def city_get():
-        global city,state
+    def city_get(self):
         #获取城市编码
-        f = open('/data/file/wifi.txt', 'r',encoding = "utf-8") #获取账号密码
-        info = json.loads(f.read())
-        f.close()
-        city[0] = info['CITY'] 
+        with open('/data/file/wifi.txt', 'r',encoding = "utf-8") as f: #获取账号密码
+            info = json.loads(f.read())
+        Server.city[0] = info['CITY'] 
         #获取城市名称
         f = open('/data/CityCode.txt', 'r',encoding = "utf-8")
         num = 0
         while True:   
             text = f.readline()   
-            if city[0] in text: 
-                if city[0] == re.match(r'"(.+?)"',text).group(1): #城市名称完全一样
-                    city[1] = re.match(r'"(.+?)"',text.split(': ')[1]).group(1) #"获取城市编码"
+            if Server.city[0] in text: 
+                if Server.city[0] == re.match(r'"(.+?)"',text).group(1): #城市名称完全一样
+                    Server.city[1] = re.match(r'"(.+?)"',text.split(': ')[1]).group(1) #"获取城市编码"
                     break 
             elif '}' in text: #结束，没这个城市。
                 print('No City Name!')
@@ -165,9 +157,9 @@ class server:
         if 'city.txt' in os.listdir('/data/'): 
             f = open('/data/city.txt', 'r',encoding = "utf-8")
             city_text = f.read()
-            for i in range(len(city[0])):
-                if city[0][i] in city_text:      
-                    if i == len(city[0])-1: #全部字体都有         
+            for i in range(len(Server.city[0])):
+                if Server.city[0][i] in city_text:      
+                    if i == len(Server.city[0])-1: #全部字体都有         
                         city_node = 1 #标记字符信息正常
             f.close()
         #城市字库正常，无需制作
@@ -176,64 +168,61 @@ class server:
         else: #获取字库文件并保存
             #生成城市字模文件
             city_font= {}   
-            for i in range(len(city[0])): 
+            for i in range(len(Server.city[0])): 
                 f = open('/data/Fonts/fonts_city.py', 'r') 
                 while True:    
                     text = f.readline()
-                    if city[0][i] in text: 
+                    if Server.city[0][i] in text: 
                         while True:  
                             text = text + f.readline()
                             if ')' in text:
                                 a = re.search('[(]' + '(.*?)' + '[)]',text).group(1).replace('\r\n','').replace(' ','').split(',')
                                 for j in range(len(a)):
                                     a[j] = int(a[j])
-                                city_font[city[0][i]] = a
+                                city_font[Server.city[0][i]] = a
                                 break
                         break
                     if not text: #读完
                         print("No City Fonts.")
                         break
                 f.close()
-            f = open('/data/city.txt', 'w',encoding = "utf-8") #以写的方式打开一个文件，没有该文件就自动新建
-            f.write((json.dumps(city_font))) #写入数据
-            f.close() #每次操作完记得关闭文件
-            gc.collect() #内存回收
-            state+=1
+            with open('/data/city.txt', 'w',encoding = "utf-8") as f:#以写的方式打开一个文件，没有该文件就自动新建
+                f.write((json.dumps(city_font))) #写入数据
+                self.state+=1
             return True
         
     #网页获取天气数据
-    def weather_get(datetime):
-        global weather,lost,total,city,state,weather_state
-        for i in range(1):#失败会重试(为满足main.py中的代码，把5次改成1次）
+    def weather_get(self,datetime):
+        for i in range(3): #失败会重试
             try:      
-                myURL = urequest.urlopen("http://www.weather.com.cn/weather1d/"+city[1]+".shtml")
+                myURL = urequest.urlopen("http://www.weather.com.cn/weather1d/"+Server.city[1]+".shtml")
                 text = myURL.read(39000+100*i).decode('utf-8') #抓取约前4W个字符，节省内存
                 #获取当日天气、高低温
                 text1=re.search('id="hidden_title" value="' + '(.*?)' + '°C',text).group(1)
-                weather[0] = text1.split()[2] #当日天气
-                weather[1] = str(min(list(map(int,text1.split()[3].split('/'))))) #当天最低温
-                weather[2] = str(max(list(map(int,text1.split()[3].split('/'))))) #当天最高温
+                Server.weather[0] = text1.split()[2] #当日天气
+                Server.weather[1] = str(min(list(map(int,text1.split()[3].split('/'))))) #当天最低温
+                Server.weather[2] = str(max(list(map(int,text1.split()[3].split('/'))))) #当天最高温
                 #获取实时天气
                 text2 = json.loads(re.search('var hour3data=' + '(.*?)' + '</script>',text).group(1))
                 for i in range(len(text2['1d'])): 
                     if int(text2['1d'][i].split(',')[0].split('日')[0]) == datetime[2]:#日期相同
                         if datetime[4] <= int(text2['1d'][i].split(',')[0].split('日')[1].split('时')[0]): #小时
                             if i == 0 or datetime[4] == int(text2['1d'][i].split(',')[0].split('日')[1].split('时')[0]):
-                                weather[3] = text2['1d'][i].split(',')[2] #实时天气
+                                Server.weather[3] = text2['1d'][i].split(',')[2] #实时天气
                             else:
-                                weather[3] = text2['1d'][i-1].split(',')[2] #实时天气
+                                Server.weather[3] = text2['1d'][i-1].split(',')[2] #实时天气
                             break
                 #获取实时空气质量、风向风力、温湿度
                 text3 = json.loads(re.search('var observe24h_data = ' + '(.*?)' + ';',text).group(1))
                 for i in range(len(text3['od']['od2'])):
-                    weather[4] = text3['od']['od2'][i]['od28'] #空气质量
-                    if weather[4] != '':
+                    Server.weather[4] = text3['od']['od2'][i]['od28'] #空气质量
+                    if Server.weather[4] != '':
                         break
                 for i in range(len(text3['od']['od2'])):
-                    weather[5] = text3['od']['od2'][i]['od24'] #实时风向
-                    if weather[5] != '':
+                    Server.weather[5] = text3['od']['od2'][i]['od24'] #实时风向
+                    if Server.weather[5] != '':
                         break
-                if '风' in weather[5]:#获取的是风向
+                if '风' in Server.weather[5]:#获取的是风向
                     pass
                 else: #获取失败，从另外一个地方获取
                     text2 = json.loads(re.search('var hour3data=' + '(.*?)' + '</script>',text).group(1))
@@ -241,81 +230,78 @@ class server:
                         if int(text2['1d'][i].split(',')[0].split('日')[0]) == datetime[2]:#日期相同
                             if datetime[4] <= int(text2['1d'][i].split(',')[0].split('日')[1].split('时')[0]): #小时
                                 if i == 0 or datetime[4] == int(text2['1d'][i].split(',')[0].split('日')[1].split('时')[0]):
-                                    weather[5] = text2['1d'][i].split(',')[4] #实时风向
+                                    Server.weather[5] = text2['1d'][i].split(',')[4] #实时风向
                                 else:
-                                    weather[5] = text2['1d'][i-1].split(',')[4] #实时风向
+                                    Server.weather[5] = text2['1d'][i-1].split(',')[4] #实时风向
                                 break
                 for i in range(len(text3['od']['od2'])):
-                    weather[6] = text3['od']['od2'][i]['od25'] #实时风力级数
-                    if weather[6] != '':
+                    Server.weather[6] = text3['od']['od2'][i]['od25'] #实时风力级数
+                    if Server.weather[6] != '':
                         break
                 for i in range(len(text3['od']['od2'])):
-                    weather[8] = text3['od']['od2'][i]['od27'] #相对湿度
-                    if weather[8] != '':
+                    Server.weather[8] = text3['od']['od2'][i]['od27'] #相对湿度
+                    if Server.weather[8] != '':
                         break
                 for i in range(len(text3['od']['od2'])):
-                    weather[7] = text3['od']['od2'][i]['od22'] #温度
-                    if weather[7] != '':
+                    Server.weather[7] = text3['od']['od2'][i]['od22'] #温度
+                    if Server.weather[7] != '':
                         break 
-                total = total+1
-                weather_state=1
-                f = open('/data/file/weather.txt', 'w') #以写的方式打开一个文件，没有该文件就自动新建
-                f.write(json.dumps(weather)) #写入数据
-                f.close() #每次操作完记得关闭文件 
+                self.total += 1
+                self.weather_state=1
+                with open('/data/file/weather.txt', 'w') as f: #以写的方式打开一个文件，没有该文件就自动新建
+                    f.write(json.dumps(Server.weather)) #写入数据
+                gc.collect()
                 return None
             except:
                 print("Can not get weather!")
                 print("Not online")
-                lost = lost + 1
-                weather_state=0
-                if 'datetime.txt' in os.listdir('/data/file/'):
-                    f = open('/data/file/weather.txt', 'r',encoding = "utf-8")
-                    weather = json.loads(f.read())
-                    f.close()
-                gc.collect() #内存回收
-            state+=1
+                self.lost += 1
+                self.weather_state=0
+                if 'weather.txt' in os.listdir('/data/file/'):
+                    try:
+                        with open('/data/file/weather.txt', 'r',encoding = "utf-8") as f:
+                            Server.weather = json.loads(f.read())
+                    except:
+                        print("暂无天气数据")
+                gc.collect()
+            self.state+=1
     
-    def re(server):
-        global city,weather,weather_state,time_state,state
+    def re(self,server):
         datetime = rtc.datetime()
-        if server=='city':
-            return city
-        elif server=='weather':
-            return weather
-        elif server=='wst':
-            return weather_state
+        if server=='wst':
+            return Server.weather_state
         elif server=='rtc':
             return datetime
         elif server=='ts':
-            return time_state
+            return self.rtc_state
         elif server=='state':
-            return state
+            return self.state
         else:
             return False
     
-    def screen_off():
+    def screen_off(self):
         tftlcd.LCD15(portrait=1)
     
-    def check():
-        global state
-        if state==4:
-            f = open('/data/file/mode.txt','w',encoding = "utf-8")
-            f.write("run")
-            f.close()
+    def check(self):
+        if self.state==0:
+            print('boot')
+        elif self.state==4:
+            with open('/data/file/mode.txt','w',encoding = "utf-8") as f:
+                f.write("run")
+            print("start")
             
-    def info_print():
-        global city,weather
+    def info_print(self):
         print(rtc.datetime())
-        print('城市:',city[0],city[1])
-        print('当日天气:',weather[0])
-        print('当日最低温:',weather[1])
-        print('当日最高温:',weather[2])
-        print('实时天气:',weather[3])
-        print('实时空气质量:',weather[4])
-        print('实时风向:',weather[5])
-        print('实时风力级数:',weather[6])
-        print('实时温度:',weather[7])
-        print('实时湿度:',weather[8])
-        print('total:',total)
-        print('lost:',lost)
+        print('城市:',Server.city[0],Server.city[1])
+        print('当日天气:',Server.weather[0])
+        print('当日最低温:',Server.weather[1])
+        print('当日最高温:',Server.weather[2])
+        print('实时天气:',Server.weather[3])
+        print('实时空气质量:',Server.weather[4])
+        print('实时风向:',Server.weather[5])
+        print('实时风力级数:',Server.weather[6])
+        print('实时温度:',Server.weather[7])
+        print('实时湿度:',Server.weather[8])
+        print('total:',self.total)
+        print('lost:',self.lost)
         

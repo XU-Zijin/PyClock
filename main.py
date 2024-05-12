@@ -1,20 +1,22 @@
 '''
 主文件
 Powered By MicroPython
-Version 6.3.21
+Version 7.0.0
 By XZJ
 '''
-print('Version 6.3.21')
+
+print('Version 7.0.0')
 import network
 sta_if = network.WLAN(network.STA_IF)
 #导入server
-from lib.service.service import server
+from lib.service.service import Server
+server=Server()
 server.start_screen()
 #导入相关模块
 from lib.service import led
 import time,os,machine,gc,json
 machine.freq(160000000)
-print("boot")
+server.check()
 f = open('/data/file/mode.txt','w',encoding = "utf-8")
 f.write("boot")
 f.close()
@@ -23,12 +25,12 @@ f = open('/data/file/set.txt','w',encoding = "utf-8")
 f.write("simple")
 f.close()
 from machine import Pin,WDT,Timer
-sys=0#系统状态，0为boot，1为run
+sys=0 #系统状态，0为boot，1为run
 count=0
 ui_count=3
 ui_cp=None
 first_light=[0,0,0]
-get_time=0#获取时间次数
+get_time=0 #获取时间次数
 #按键    
 KEY=Pin(9,Pin.IN,Pin.PULL_UP) #构建KEY对象
 #按键中断触发
@@ -52,11 +54,7 @@ def key(KEY):
             if ui>2:
                 ui=0
         elif sys == 0:
-            from lib.develop import devmode
-            f = open('/data/file/set.txt','w',encoding = "utf-8")
-            f.write("dev")
-            f.close()
-            mode.run()
+            pass
         gc.collect()
         #长按
         start = time.ticks_ms()
@@ -105,7 +103,7 @@ while 'wifi.txt' not in os.listdir('/data/file/'):
     f = open('/data/file/set.txt','w',encoding = "utf-8")
     f.write("simple")
     f.close()
-    from libs import ap
+    from libs import ap #方便调试
     ap.startAP() #启动AP配网模式
 #启动看门狗，超时30秒。
 #wdt = WDT(timeout=30000)
@@ -117,12 +115,11 @@ while not server.WIFI_Connect('p','p')==True: #等待wifi连接
 server.sync_ntp()
 #获取城市名称和编码
 server.city_get()
-city=server.re('city')
+city=Server.city
 datetime = server.re('rtc')
 server.weather_get(datetime)
-weather=server.re('weather')
+weather=Server.weather
 server.info_print()
-server.check()
 gc.collect()
 sys=1
 tick = 61 #每秒刷新标志位
@@ -149,9 +146,7 @@ else:
         ui=2
         from libs.ui import ticlock
         first_light[2]=1
-f = open('/data/file/mode.txt','w',encoding = "utf-8")
-f.write("run")
-print("start")
+server.check()
 if sys==1: 
     while True:
         #获取时间
@@ -165,7 +160,7 @@ if sys==1:
             led.on()
             server.WIFI_Connect('p','p') #检查WiFi，掉线的话自动重连
             server.weather_get(datetime)
-            weather=server.re('weather')
+            weather=Server.weather
             server.info_print()
             gc.collect()
             led.off()
@@ -219,3 +214,4 @@ if sys==1:
             rssi = sta_if.status('rssi')
             print("RSSI: {}".format(rssi),'dB')
             print(ui,ui_cp)
+
